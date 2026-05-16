@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { Search, MapPin, Star, History, Bell, Navigation, Zap, ShieldCheck, Clock, Moon, Sun } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import Link from "next/link";
 import { useSavedPlaces } from "@/hooks/useSavedPlaces";
 import { useRouter } from "next/navigation";
 

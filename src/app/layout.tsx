@@ -1,7 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { Inter } from "next/font/google";
+import { motion, AnimatePresence } from "framer-motion";
+import Link from "next/link";
+import { MapIcon, Building2 } from "lucide-react";
 import "./globals.css";
 import { BottomNav } from "@/components/BottomNav";
 import { cn } from "@/lib/utils";
@@ -18,9 +21,9 @@ export default function RootLayout({
   useEffect(() => {
     const savedTheme = localStorage.getItem("theme") as "light" | "dark";
     if (savedTheme) {
-      setTheme(savedTheme);
+      setTimeout(() => setTheme(savedTheme), 0);
     } else if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
-      setTheme("dark");
+      setTimeout(() => setTheme("dark"), 0);
     }
   }, []);
 

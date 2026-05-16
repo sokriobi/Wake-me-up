@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
-import { Search, MapPin, Loader2, X, CircleDot, ArrowDown, Crosshair, Navigation, Plane, Train, Building2, Map as MapIcon, ChevronDown } from "lucide-react";
+import { MapPin, Loader2, CircleDot, Crosshair, Plane, Train, Building2, Map as MapIcon, ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface SearchResult {

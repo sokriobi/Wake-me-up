@@ -7,7 +7,7 @@ import { useAlarm } from "@/hooks/useAlarm";
 import { useSettings } from "@/hooks/useSettings";
 import { useSavedPlaces, SavedPlace } from "@/hooks/useSavedPlaces";
 import { calculateDistance, formatDistance } from "@/lib/utils";
-import { Navigation, MapPin, X, Bell, Loader2, Settings2, Play, Square, ArrowLeft, MoreVertical, Share2, LocateFixed, Zap, Star, Clock, ChevronUp, Map as MapIcon } from "lucide-react";
+import { Navigation, MapPin, Bell, Loader2, Play, Square, ArrowLeft, LocateFixed, Zap, Star, Clock, Map as MapIcon } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { RouteSearch } from "@/components/RouteSearch";
 import { cn } from "@/lib/utils";
@@ -53,13 +53,16 @@ function TrackingContent() {
   // Check for alarm
   useEffect(() => {
     if (distance !== null && distance <= alertRadius && !isAlarmActive && isTracking) {
-      setIsAlarmActive(true);
-      triggerAlarm(`Approaching stop: ${destinationName || "Destination"}`);
+      const timer = setTimeout(() => {
+        setIsAlarmActive(true);
+        triggerAlarm(`Approaching stop: ${destinationName || "Destination"}`);
+      }, 0);
       
       // Haptic feedback if enabled
       if (settings.vibrate && "vibrate" in navigator) {
         navigator.vibrate([500, 300, 500, 300, 500]);
       }
+      return () => clearTimeout(timer);
     }
   }, [distance, alertRadius, isAlarmActive, triggerAlarm, isTracking, destinationName, settings.vibrate]);
 
@@ -103,10 +106,13 @@ function TrackingContent() {
     const name = searchParams.get("name");
     
     if (lat && lon && name) {
-      setDestination([parseFloat(lat), parseFloat(lon)]);
-      setDestinationName(name);
-      setFollowUser(false);
-      setSheetState("compact");
+      const timer = setTimeout(() => {
+        setDestination([parseFloat(lat), parseFloat(lon)]);
+        setDestinationName(name);
+        setFollowUser(false);
+        setSheetState("compact");
+      }, 0);
+      return () => clearTimeout(timer);
     }
   }, [searchParams]);
 
