@@ -200,38 +200,38 @@ export default function TrackingPage() {
         </button>
       </div>
 
-      {/* Bottom Control Sheet */}
+      {/* Bottom Control Sheet - Made more compact and pushed down */}
       <div className={cn(
         "absolute bottom-0 left-0 right-0 z-40 transition-all duration-700 ease-[cubic-bezier(0.2,0.8,0.2,1)]",
-        isNavMode ? "p-0" : "p-5 pb-14"
+        isNavMode ? "p-0" : "p-4 pb-28" // Increased bottom padding to push it "down" visually on mobile
       )}>
         <div className={cn(
-          "bg-card/95 backdrop-blur-2xl shadow-[0_-20px_50px_rgba(0,0,0,0.15)] border-t border-border max-w-lg mx-auto",
-          isNavMode ? "rounded-t-[50px] p-10 pb-16" : "rounded-[44px] p-8 border-x"
+          "bg-card/98 backdrop-blur-3xl shadow-[0_-15px_50px_rgba(0,0,0,0.2)] border-t border-border max-w-lg mx-auto",
+          isNavMode ? "rounded-t-[44px] p-8 pb-12" : "rounded-[36px] p-6 border-x"
         )}>
           {!isNavMode ? (
-            <div className="space-y-10">
-              <div className="flex flex-col gap-6">
-                <div className="flex justify-between items-center px-2">
-                  <h2 className="text-[10px] font-black uppercase tracking-[0.4em] text-muted-foreground">
-                    Wake-up Radius
+            <div className="space-y-6">
+              <div className="flex flex-col gap-4">
+                <div className="flex justify-between items-center px-1">
+                  <h2 className="text-[9px] font-black uppercase tracking-[0.3em] text-muted-foreground/70 italic">
+                    Proximity Alert
                   </h2>
-                  <div className="px-3 py-1 bg-primary/10 rounded-lg">
-                    <span className="text-primary font-black text-xs italic tracking-widest uppercase">
-                      Active: {formatDistance(alertRadius)}
+                  <div className="px-2.5 py-0.5 bg-primary/10 rounded-md border border-primary/20">
+                    <span className="text-primary font-black text-[9px] uppercase tracking-widest">
+                      {formatDistance(alertRadius)}
                     </span>
                   </div>
                 </div>
-                <div className="flex gap-3">
+                <div className="flex gap-2">
                   {RADIUS_OPTIONS.map((r) => (
                     <button
                       key={r}
                       onClick={() => setAlertRadius(r)}
                       className={cn(
-                        "flex-1 h-14 rounded-2xl text-[10px] font-black transition-all border-2 tracking-widest uppercase",
+                        "flex-1 h-12 rounded-xl text-[9px] font-black transition-all border-2 tracking-widest uppercase",
                         alertRadius === r 
                           ? "bg-primary border-primary text-white shadow-lg shadow-primary/20" 
-                          : "bg-secondary/50 border-transparent text-muted-foreground hover:bg-secondary"
+                          : "bg-secondary/40 border-transparent text-muted-foreground hover:bg-secondary"
                       )}
                     >
                       {formatDistance(r)}
@@ -243,29 +243,29 @@ export default function TrackingPage() {
               <button
                 onClick={handleStart}
                 disabled={!destination}
-                className="w-full h-20 bg-primary disabled:opacity-10 disabled:grayscale rounded-[32px] flex items-center justify-center gap-5 font-black text-2xl shadow-[0_20px_40px_rgba(37,99,235,0.3)] active:scale-95 transition-all text-white italic group uppercase tracking-tight"
+                className="w-full h-16 bg-primary disabled:opacity-10 disabled:grayscale rounded-2xl flex items-center justify-center gap-4 font-black text-xl shadow-[0_15px_30px_rgba(37,99,235,0.25)] active:scale-95 transition-all text-white italic group uppercase tracking-tight"
               >
-                <Play fill="white" size={28} className="group-hover:translate-x-1 transition-transform" />
-                Start Journey
+                <Play fill="white" size={24} className="group-hover:translate-x-1 transition-transform" />
+                Start Trip
               </button>
             </div>
           ) : (
-            <div className="flex items-center justify-between gap-8">
+            <div className="flex items-center justify-between gap-6">
                <div className="flex-1 min-w-0">
-                 <p className="text-[10px] text-muted-foreground font-black uppercase tracking-[0.3em] mb-2 italic">Target Station</p>
-                 <p className="text-3xl font-black truncate leading-none tracking-tighter">{destinationName}</p>
-                 <div className="flex items-center gap-3 mt-4">
-                    <div className="w-8 h-8 rounded-xl bg-primary/10 flex items-center justify-center">
-                      <Bell size={16} className="text-primary" fill="currentColor" fillOpacity={0.2} />
+                 <p className="text-[9px] text-muted-foreground font-black uppercase tracking-[0.25em] mb-1.5 italic">Destination</p>
+                 <p className="text-2xl font-black truncate leading-none tracking-tighter">{destinationName}</p>
+                 <div className="flex items-center gap-2 mt-3">
+                    <div className="w-6 h-6 rounded-lg bg-primary/10 flex items-center justify-center">
+                      <Bell size={12} className="text-primary" fill="currentColor" fillOpacity={0.2} />
                     </div>
-                    <span className="text-xs font-black text-primary uppercase tracking-widest">Alarm set at {formatDistance(alertRadius)}</span>
+                    <span className="text-[9px] font-black text-primary uppercase tracking-widest">Alert @ {formatDistance(alertRadius)}</span>
                  </div>
                </div>
                <button
                 onClick={handleStopAlarm}
-                className="w-24 h-24 bg-rose-500/10 hover:bg-rose-500/20 text-rose-500 rounded-[32px] flex items-center justify-center transition-all active:scale-90 border-2 border-rose-500/10 shadow-lg shadow-rose-500/5"
+                className="w-20 h-20 bg-rose-500/10 hover:bg-rose-500/20 text-rose-500 rounded-[28px] flex items-center justify-center transition-all active:scale-90 border-2 border-rose-500/10 shadow-lg shadow-rose-500/5"
               >
-                <Square fill="currentColor" size={32} />
+                <Square fill="currentColor" size={28} />
               </button>
             </div>
           )}
