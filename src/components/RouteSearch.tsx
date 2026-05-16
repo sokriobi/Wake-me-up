@@ -115,7 +115,7 @@ export function RouteSearch({
   };
 
   return (
-    <div className="w-full bg-card rounded-[36px] p-6 shadow-[0_25px_70px_rgba(0,0,0,0.4)] border border-border/60 space-y-5 relative z-[500]">
+    <div className="w-full bg-card rounded-[36px] p-6 shadow-[0_25px_70px_rgba(0,0,0,0.4)] border border-primary/20/60 space-y-5 relative z-[500]">
       {/* From Field */}
       <div className="relative group">
         <div className="absolute left-5 top-1/2 -translate-y-1/2 z-10">
@@ -147,7 +147,7 @@ export function RouteSearch({
       </div>
 
       <div className="flex justify-center -my-8 relative z-10 pointer-events-none">
-        <div className="bg-background p-2 rounded-full border border-border shadow-lg">
+        <div className="bg-background p-2 rounded-full border border-primary/20 shadow-lg">
           <ChevronDown size={16} className="text-muted-foreground" />
         </div>
       </div>
@@ -212,7 +212,7 @@ export function RouteSearch({
                 results.map((r, i) => (
                   <button
                     key={r.place_id + i}
-                    className="w-full px-6 py-5 flex items-start gap-5 hover:bg-primary/5 active:bg-primary/10 transition-all text-left border-b border-border/50 last:border-0 group"
+                    className="w-full px-6 py-5 flex items-start gap-5 hover:bg-primary/5 active:bg-primary/10 transition-all text-left border-b border-primary/20/50 last:border-0 group"
                     onClick={() => {
                       const name = r.display_name.split(",")[0];
                       if (activeField === "from") onSelectFrom(parseFloat(r.lat), parseFloat(r.lon), name);
@@ -235,7 +235,7 @@ export function RouteSearch({
               )}
             </div>
           )}
-          <div className="sticky bottom-0 bg-secondary/50 backdrop-blur-md px-6 py-3 border-t border-border text-[9px] font-black text-center text-muted-foreground uppercase tracking-widest">
+          <div className="sticky bottom-0 bg-secondary/50 backdrop-blur-md px-6 py-3 border-t border-primary/20 text-[9px] font-black text-center text-muted-foreground uppercase tracking-widest">
             Showing results in Bangladesh
           </div>
         </div>

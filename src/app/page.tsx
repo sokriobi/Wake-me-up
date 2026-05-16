@@ -35,7 +35,7 @@ export default function Home() {
           <motion.button 
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="w-12 h-12 rounded-2xl bg-secondary border border-border flex items-center justify-center relative shadow-sm"
+            className="w-12 h-12 rounded-2xl bg-secondary border border-primary/20 flex items-center justify-center relative shadow-sm"
           >
             <Bell size={20} className="text-foreground" />
             <span className="absolute top-3 right-3 w-2 h-2 bg-rose-500 rounded-full border-2 border-background"></span>
@@ -81,13 +81,13 @@ export default function Home() {
           </Link>
           
           <div className="grid grid-rows-2 gap-5">
-            <button className="flex items-center gap-4 p-5 bg-secondary/80 border border-border rounded-[28px] hover:bg-secondary transition-all group shadow-sm">
+            <button className="flex items-center gap-4 p-5 bg-secondary/80 border border-primary/20 rounded-[28px] hover:bg-secondary transition-all group shadow-sm">
               <div className="w-10 h-10 rounded-xl bg-yellow-500/10 flex items-center justify-center group-hover:scale-110 transition-transform">
                 <Star size={20} className="text-yellow-600" fill="currentColor" />
               </div>
               <span className="font-black text-xs uppercase tracking-widest text-foreground">Saved</span>
             </button>
-            <button className="flex items-center gap-4 p-5 bg-secondary/80 border border-border rounded-[28px] hover:bg-secondary transition-all group shadow-sm">
+            <button className="flex items-center gap-4 p-5 bg-secondary/80 border border-primary/20 rounded-[28px] hover:bg-secondary transition-all group shadow-sm">
               <div className="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center group-hover:scale-110 transition-transform">
                 <Clock size={20} className="text-blue-600" />
               </div>
@@ -114,7 +114,7 @@ export default function Home() {
                 <motion.div 
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
-                  className="text-center py-16 bg-secondary/30 rounded-[40px] border border-dashed border-border"
+                  className="text-center py-16 bg-secondary/30 rounded-[40px] border border-dashed border-primary/20"
                 >
                   <p className="text-xs text-muted-foreground font-black uppercase tracking-widest">No trip history found</p>
                 </motion.div>
@@ -126,7 +126,7 @@ export default function Home() {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: i * 0.05 }}
                     key={dest.id}
-                    className="flex items-center p-6 bg-secondary/50 border border-border/50 rounded-[32px] hover:bg-secondary hover:border-border transition-all cursor-pointer group shadow-sm"
+                    className="flex items-center p-6 bg-secondary/50 border border-primary/20/50 rounded-[32px] hover:bg-secondary hover:border-primary/20 transition-all cursor-pointer group shadow-sm"
                   >
                     <div className="w-12 h-12 rounded-2xl bg-background flex items-center justify-center mr-5 group-hover:bg-primary group-hover:text-white transition-all shadow-inner">
                       <MapPin size={22} className="text-muted-foreground group-hover:text-white transition-colors" />

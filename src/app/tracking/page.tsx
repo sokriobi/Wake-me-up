@@ -131,7 +131,7 @@ export default function TrackingPage() {
         {isNavMode && (
           <motion.div 
             initial={{ y: -100 }} animate={{ y: 0 }} exit={{ y: -100 }}
-            className="absolute top-0 left-0 right-0 z-50 bg-background/90 backdrop-blur-2xl p-6 pt-14 border-b border-border shadow-2xl"
+            className="absolute top-0 left-0 right-0 z-50 bg-background/90 backdrop-blur-2xl p-6 pt-14 border-b border-primary/20 shadow-2xl"
           >
             <div className="flex items-center gap-4 max-w-lg mx-auto">
               <button onClick={() => { setIsNavMode(false); stopTracking(); }} className="p-3.5 bg-secondary rounded-2xl shadow-sm"><ArrowLeft size={24}/></button>
@@ -163,7 +163,7 @@ export default function TrackingPage() {
           onClick={() => setFollowUser(!followUser)}
           className={cn(
             "w-14 h-14 rounded-2xl flex items-center justify-center shadow-2xl transition-all border",
-            followUser ? "bg-primary text-white border-primary shadow-primary/20" : "bg-card text-foreground border-border"
+            followUser ? "bg-primary text-white border-primary shadow-primary/20" : "bg-card text-foreground border-primary/20"
           )}
         >
           <LocateFixed size={24} />
@@ -184,7 +184,7 @@ export default function TrackingPage() {
         }}
         className="absolute inset-0 z-50 pointer-events-none"
       >
-        <div className="h-full bg-card/98 backdrop-blur-3xl border-t border-border rounded-t-[44px] shadow-[0_-25px_60px_rgba(0,0,0,0.2)] pointer-events-auto overflow-hidden flex flex-col">
+        <div className="h-full bg-card/98 backdrop-blur-3xl border-t border-primary/20 rounded-t-[44px] shadow-[0_-25px_60px_rgba(0,0,0,0.2)] pointer-events-auto overflow-hidden flex flex-col">
           {/* Sheet Handle */}
           <div className="w-full py-4 flex flex-col items-center gap-1 cursor-grab active:cursor-grabbing shrink-0" onClick={() => setSheetState(sheetState === "compact" ? "expanded" : "compact")}>
             <div className="w-12 h-1.5 bg-muted rounded-full" />
@@ -230,11 +230,11 @@ export default function TrackingPage() {
                     <div className="h-px flex-1 bg-border mx-4"></div>
                   </div>
                   <div className="grid grid-cols-2 gap-4">
-                    <button className="flex items-center gap-4 p-6 bg-secondary/30 rounded-[32px] border border-border/50 hover:bg-secondary transition-all shadow-sm">
+                    <button className="flex items-center gap-4 p-6 bg-secondary/30 rounded-[32px] border border-primary/20/50 hover:bg-secondary transition-all shadow-sm">
                       <div className="w-12 h-12 bg-blue-500/10 rounded-[18px] flex items-center justify-center"><Star size={22} className="text-blue-500" fill="currentColor" fillOpacity={0.2} /></div>
                       <span className="text-[10px] font-black uppercase tracking-widest text-foreground">Home</span>
                     </button>
-                    <button className="flex items-center gap-4 p-6 bg-secondary/30 rounded-[32px] border border-border/50 hover:bg-secondary transition-all shadow-sm">
+                    <button className="flex items-center gap-4 p-6 bg-secondary/30 rounded-[32px] border border-primary/20/50 hover:bg-secondary transition-all shadow-sm">
                       <div className="w-12 h-12 bg-purple-500/10 rounded-[18px] flex items-center justify-center"><Clock size={22} className="text-purple-500" /></div>
                       <span className="text-[10px] font-black uppercase tracking-widest text-foreground">Office</span>
                     </button>

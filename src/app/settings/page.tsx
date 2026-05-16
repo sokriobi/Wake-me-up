@@ -27,7 +27,7 @@ export default function SettingsPage() {
     <div className="min-h-screen bg-background p-6 pt-16 pb-40">
       <div className="max-w-lg mx-auto space-y-10">
         <header className="flex items-center gap-6 mb-12">
-          <Link href="/tracking" className="w-12 h-12 bg-card rounded-2xl flex items-center justify-center border border-border shadow-sm active:scale-90 transition-transform">
+          <Link href="/tracking" className="w-12 h-12 bg-card rounded-2xl flex items-center justify-center border border-primary/20 shadow-sm active:scale-90 transition-transform">
             <ArrowLeft size={24} />
           </Link>
           <h1 className="text-4xl font-black italic tracking-tighter uppercase leading-none">Settings</h1>
@@ -38,14 +38,14 @@ export default function SettingsPage() {
             <h2 className="text-[10px] font-black uppercase tracking-[0.4em] text-muted-foreground italic px-2">
               {group.title}
             </h2>
-            <div className="bg-card/50 backdrop-blur-xl border border-border/50 rounded-[32px] overflow-hidden shadow-sm">
+            <div className="bg-card/50 backdrop-blur-xl border border-primary/20/50 rounded-[32px] overflow-hidden shadow-sm">
               {group.items.map((item, idx) => (
                 <button
                   key={item.label}
-                  className={`w-full p-6 flex items-center justify-between hover:bg-secondary/50 transition-all active:bg-secondary ${idx !== group.items.length - 1 ? "border-b border-border/50" : ""}`}
+                  className={`w-full p-6 flex items-center justify-between hover:bg-secondary/50 transition-all active:bg-secondary ${idx !== group.items.length - 1 ? "border-b border-primary/20/50" : ""}`}
                 >
                   <div className="flex items-center gap-4">
-                    <div className={`w-10 h-10 rounded-xl bg-background flex items-center justify-center border border-border/50 shadow-inner ${item.color}`}>
+                    <div className={`w-10 h-10 rounded-xl bg-background flex items-center justify-center border border-primary/20/50 shadow-inner ${item.color}`}>
                       <item.icon size={20} />
                     </div>
                     <div className="text-left">

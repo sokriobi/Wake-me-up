@@ -21,7 +21,7 @@ export function BottomNav({ theme, onToggleTheme }: BottomNavProps) {
   ];
 
   return (
-    <nav className="fixed bottom-8 left-1/2 -translate-x-1/2 w-[92%] max-w-md h-24 bg-card/90 backdrop-blur-3xl border border-border/50 rounded-[44px] flex items-center justify-around px-4 shadow-[0_25px_80px_rgba(0,0,0,0.2)] z-[100] active-tap">
+    <nav className="fixed bottom-8 left-1/2 -translate-x-1/2 w-[92%] max-w-md h-24 bg-card/90 backdrop-blur-3xl border border-primary/20/50 rounded-[44px] flex items-center justify-around px-4 shadow-[0_25px_80px_rgba(0,0,0,0.2)] z-[100] active-tap">
       {navItems.map((item) => {
         const isActive = pathname === item.href;
         return (
