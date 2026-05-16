@@ -1,129 +1,72 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { Moon, Sun, Volume2, Battery, MessageSquare, ShieldCheck, ChevronRight, Info } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { motion } from "framer-motion";
+import { Bell, Shield, Moon, Volume2, Info, ChevronRight, ArrowLeft } from "lucide-react";
+import Link from "next/link";
 
 export default function SettingsPage() {
-  const [darkMode, setDarkMode] = useState(true);
-  const [voiceAlerts, setVoiceAlerts] = useState(true);
-  const [batterySaver, setBatterySaver] = useState(false);
-  const [volume, setVolume] = useState(80);
-
-  const SettingItem = ({ icon: Icon, label, description, children }: any) => (
-    <div className="flex items-center justify-between p-4 bg-secondary/30 rounded-2xl border border-white/5 mb-4">
-      <div className="flex items-center gap-4">
-        <div className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center text-primary">
-          <Icon size={20} />
-        </div>
-        <div>
-          <h3 className="font-medium">{label}</h3>
-          {description && <p className="text-xs text-muted-foreground">{description}</p>}
-        </div>
-      </div>
-      {children}
-    </div>
-  );
+  const settingsGroups = [
+    {
+      title: "App Settings",
+      items: [
+        { icon: Bell, label: "Alarm Sound", value: "Transit Alert", color: "text-blue-500" },
+        { icon: Volume2, label: "Volume", value: "80%", color: "text-emerald-500" },
+        { icon: Moon, label: "Dark Mode", value: "System", color: "text-purple-500" },
+      ]
+    },
+    {
+      title: "Security & Privacy",
+      items: [
+        { icon: Shield, label: "Location Privacy", value: "Always On", color: "text-rose-500" },
+        { icon: Info, label: "About WakeMe", value: "v1.2.4", color: "text-amber-500" },
+      ]
+    }
+  ];
 
   return (
-    <div className="px-6 pt-12 max-w-md mx-auto">
-      <header className="mb-10">
-        <h1 className="text-3xl font-bold">Settings</h1>
-        <p className="text-muted-foreground">Customize your experience</p>
-      </header>
+    <div className="min-h-screen bg-background p-6 pt-16 pb-40">
+      <div className="max-w-lg mx-auto space-y-10">
+        <header className="flex items-center gap-6 mb-12">
+          <Link href="/tracking" className="w-12 h-12 bg-card rounded-2xl flex items-center justify-center border border-border shadow-sm active:scale-90 transition-transform">
+            <ArrowLeft size={24} />
+          </Link>
+          <h1 className="text-4xl font-black italic tracking-tighter uppercase leading-none">Settings</h1>
+        </header>
 
-      <section className="mb-8">
-        <h2 className="text-sm font-bold text-muted-foreground uppercase tracking-widest mb-4 ml-2">Preferences</h2>
-        
-        <SettingItem icon={Moon} label="Dark Mode" description="Saves battery on OLED screens">
-          <button 
-            onClick={() => setDarkMode(!darkMode)}
-            className={cn(
-              "w-12 h-6 rounded-full relative transition-colors",
-              darkMode ? "bg-primary" : "bg-muted"
-            )}
-          >
-            <div className={cn(
-              "absolute top-1 w-4 h-4 bg-white rounded-full transition-all",
-              darkMode ? "left-7" : "left-1"
-            )} />
-          </button>
-        </SettingItem>
-
-        <SettingItem icon={MessageSquare} label="Voice Alerts" description="Announce when stop is near">
-           <button 
-            onClick={() => setVoiceAlerts(!voiceAlerts)}
-            className={cn(
-              "w-12 h-6 rounded-full relative transition-colors",
-              voiceAlerts ? "bg-primary" : "bg-muted"
-            )}
-          >
-            <div className={cn(
-              "absolute top-1 w-4 h-4 bg-white rounded-full transition-all",
-              voiceAlerts ? "left-7" : "left-1"
-            )} />
-          </button>
-        </SettingItem>
-
-        <SettingItem icon={Battery} label="Battery Saver" description="Reduced tracking frequency">
-           <button 
-            onClick={() => setBatterySaver(!batterySaver)}
-            className={cn(
-              "w-12 h-6 rounded-full relative transition-colors",
-              batterySaver ? "bg-primary" : "bg-muted"
-            )}
-          >
-            <div className={cn(
-              "absolute top-1 w-4 h-4 bg-white rounded-full transition-all",
-              batterySaver ? "left-7" : "left-1"
-            )} />
-          </button>
-        </SettingItem>
-      </section>
-
-      <section className="mb-8">
-        <h2 className="text-sm font-bold text-muted-foreground uppercase tracking-widest mb-4 ml-2">Audio</h2>
-        <div className="p-4 bg-secondary/30 rounded-2xl border border-white/5 space-y-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <Volume2 size={20} className="text-primary" />
-              <span className="font-medium">Alarm Volume</span>
+        {settingsGroups.map((group) => (
+          <section key={group.title} className="space-y-4">
+            <h2 className="text-[10px] font-black uppercase tracking-[0.4em] text-muted-foreground italic px-2">
+              {group.title}
+            </h2>
+            <div className="bg-card/50 backdrop-blur-xl border border-border/50 rounded-[32px] overflow-hidden shadow-sm">
+              {group.items.map((item, idx) => (
+                <button
+                  key={item.label}
+                  className={`w-full p-6 flex items-center justify-between hover:bg-secondary/50 transition-all active:bg-secondary ${idx !== group.items.length - 1 ? "border-b border-border/50" : ""}`}
+                >
+                  <div className="flex items-center gap-4">
+                    <div className={`w-10 h-10 rounded-xl bg-background flex items-center justify-center border border-border/50 shadow-inner ${item.color}`}>
+                      <item.icon size={20} />
+                    </div>
+                    <div className="text-left">
+                      <p className="text-sm font-black uppercase tracking-widest">{item.label}</p>
+                      <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mt-0.5">{item.value}</p>
+                    </div>
+                  </div>
+                  <ChevronRight size={18} className="text-muted-foreground" />
+                </button>
+              ))}
             </div>
-            <span className="text-sm font-bold text-primary">{volume}%</span>
-          </div>
-          <input 
-            type="range" 
-            min="0" 
-            max="100" 
-            value={volume} 
-            onChange={(e) => setVolume(parseInt(e.target.value))}
-            className="w-full h-1.5 bg-muted rounded-lg appearance-none cursor-pointer accent-primary" 
-          />
+          </section>
+        ))}
+
+        <div className="p-8 bg-primary rounded-[40px] text-white flex flex-col gap-4 relative overflow-hidden shadow-2xl shadow-primary/20">
+          <p className="text-2xl font-black italic tracking-tighter leading-none uppercase">Go Premium</p>
+          <p className="text-xs font-bold opacity-80 uppercase tracking-widest leading-relaxed">
+            Unlock more alarm sounds and unlimited saved places.
+          </p>
+          <div className="absolute -right-6 -bottom-6 w-32 h-32 bg-white/10 rounded-full blur-3xl" />
         </div>
-      </section>
-
-      <section className="mb-8">
-        <h2 className="text-sm font-bold text-muted-foreground uppercase tracking-widest mb-4 ml-2">App Info</h2>
-        <div className="space-y-2">
-          <div className="flex items-center justify-between p-4 bg-secondary/10 rounded-xl hover:bg-secondary/20 transition-colors cursor-pointer">
-            <div className="flex items-center gap-3">
-              <ShieldCheck size={18} className="text-green-500" />
-              <span className="text-sm">Privacy Policy</span>
-            </div>
-            <ChevronRight size={16} className="text-muted-foreground" />
-          </div>
-          <div className="flex items-center justify-between p-4 bg-secondary/10 rounded-xl hover:bg-secondary/20 transition-colors cursor-pointer">
-            <div className="flex items-center gap-3">
-              <Info size={18} className="text-blue-500" />
-              <span className="text-sm">Version 1.0.0</span>
-            </div>
-            <span className="text-xs text-muted-foreground">Up to date</span>
-          </div>
-        </div>
-      </section>
-
-      <div className="text-center pb-8">
-        <p className="text-xs text-muted-foreground">Made with ❤️ for commuters</p>
       </div>
     </div>
   );
