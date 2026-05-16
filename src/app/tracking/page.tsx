@@ -4,8 +4,10 @@ import { useState, useEffect, useCallback, useMemo } from "react";
 import dynamic from "next/dynamic";
 import { useGeolocation } from "@/hooks/useGeolocation";
 import { useAlarm } from "@/hooks/useAlarm";
+import { useSettings } from "@/hooks/useSettings";
+import { useSavedPlaces, SavedPlace } from "@/hooks/useSavedPlaces";
 import { calculateDistance, formatDistance } from "@/lib/utils";
-import { Navigation, MapPin, X, Bell, Loader2, Settings2, Play, Square, ArrowLeft, MoreVertical, Share2, LocateFixed, Zap, Star, Clock, ChevronUp } from "lucide-react";
+import { Navigation, MapPin, X, Bell, Loader2, Settings2, Play, Square, ArrowLeft, MoreVertical, Share2, LocateFixed, Zap, Star, Clock, ChevronUp, Map as MapIcon } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { RouteSearch } from "@/components/RouteSearch";
 import { cn } from "@/lib/utils";
@@ -21,6 +23,8 @@ const BD_CENTER: [number, number] = [23.8103, 90.4125];
 export default function TrackingPage() {
   const { location, error, startTracking, stopTracking, isTracking } = useGeolocation();
   const { triggerAlarm, stopAlarm, requestNotificationPermission } = useAlarm();
+  const { settings } = useSettings();
+  const { savedPlaces, recentPlaces, addRecent, savePlace } = useSavedPlaces();
   
   const [startPoint, setStartPoint] = useState<[number, number] | null>(null);
   const [startName, setStartName] = useState<string | null>(null);
@@ -45,9 +49,14 @@ export default function TrackingPage() {
       if (d <= alertRadius && !isAlarmActive && isTracking) {
         setIsAlarmActive(true);
         triggerAlarm(`Approaching stop: ${destinationName || "Destination"}`);
+        
+        // Haptic feedback if enabled
+        if (settings.vibrate && "vibrate" in navigator) {
+          navigator.vibrate([500, 300, 500, 300, 500]);
+        }
       }
     }
-  }, [location, destination, alertRadius, isAlarmActive, triggerAlarm, isTracking, destinationName]);
+  }, [location, destination, alertRadius, isAlarmActive, triggerAlarm, isTracking, destinationName, settings.vibrate]);
 
   const handleStopAlarm = () => {
     setIsAlarmActive(false);
@@ -63,17 +72,23 @@ export default function TrackingPage() {
     setFollowUser(true);
     setSheetState("compact");
     
-    // Save to history
-    try {
-      const recent = JSON.parse(localStorage.getItem("recent_destinations") || "[]");
-      const newDest = { id: Date.now(), name: destinationName, address: "Selected Destination", coords: destination };
-      localStorage.setItem("recent_destinations", JSON.stringify([newDest, ...recent].slice(0, 5)));
-    } catch (e) {
-      console.error(e);
-    }
+    // Add to recent history
+    addRecent({
+      name: destinationName || "Unknown Destination",
+      address: "Recently visited",
+      coords: destination,
+      type: "other"
+    });
 
     startTracking();
     await requestNotificationPermission().catch(console.error);
+  };
+
+  const selectPlace = (place: SavedPlace) => {
+    setDestination(place.coords);
+    setDestinationName(place.name);
+    setFollowUser(false);
+    setSheetState("compact");
   };
 
   // Auto-expand sheet when destination is picked
@@ -118,7 +133,13 @@ export default function TrackingPage() {
               fromName={startName || (location ? "Current Location" : "")}
               toName={destinationName || ""}
               currentLocation={location ? [location.latitude, location.longitude] : null}
-              onMyLocationClick={() => setFollowUser(true)}
+              onMyLocationClick={() => {
+                setFollowUser(true);
+                if (location) {
+                  setStartName("Current Location");
+                  setStartPoint([location.latitude, location.longitude]);
+                }
+              }}
               onSelectFrom={(lat, lng, name) => { setStartPoint([lat, lng]); setStartName(name); }}
               onSelectTo={(lat, lng, name) => { setDestination([lat, lng]); setDestinationName(name); setFollowUser(false); }}
             />
@@ -134,7 +155,7 @@ export default function TrackingPage() {
             className="absolute top-0 left-0 right-0 z-50 bg-background/90 backdrop-blur-2xl p-6 pt-14 border-b border-primary/20 shadow-2xl"
           >
             <div className="flex items-center gap-4 max-w-lg mx-auto">
-              <button onClick={() => { setIsNavMode(false); stopTracking(); }} className="p-3.5 bg-secondary rounded-2xl shadow-sm"><ArrowLeft size={24}/></button>
+              <button onClick={() => { setIsNavMode(false); stopTracking(); }} className="p-3.5 bg-secondary rounded-2xl shadow-sm active-tap"><ArrowLeft size={24}/></button>
               <div className="flex-1">
                 <span className="text-[10px] font-black text-primary uppercase tracking-widest block mb-1">Live Tracking</span>
                 <p className="text-xl font-black truncate tracking-tighter">{destinationName}</p>
@@ -162,7 +183,7 @@ export default function TrackingPage() {
         <button 
           onClick={() => setFollowUser(!followUser)}
           className={cn(
-            "w-14 h-14 rounded-2xl flex items-center justify-center shadow-2xl transition-all border",
+            "w-14 h-14 rounded-2xl flex items-center justify-center shadow-2xl transition-all border active-tap",
             followUser ? "bg-primary text-white border-primary shadow-primary/20" : "bg-card text-foreground border-primary/20"
           )}
         >
@@ -188,7 +209,7 @@ export default function TrackingPage() {
           {/* Sheet Handle */}
           <div className="w-full py-4 flex flex-col items-center gap-1 cursor-grab active:cursor-grabbing shrink-0" onClick={() => setSheetState(sheetState === "compact" ? "expanded" : "compact")}>
             <div className="w-12 h-1.5 bg-muted rounded-full" />
-            <span className="text-[8px] font-black text-muted-foreground uppercase tracking-[0.4em] mt-2 italic">{sheetState === "compact" ? "Swipe for Settings" : "Minimize"}</span>
+            <span className="text-[8px] font-black text-muted-foreground uppercase tracking-[0.4em] mt-2 italic">{sheetState === "compact" ? "Swipe for Details" : "Minimize"}</span>
           </div>
 
           {/* Scrollable Content */}
@@ -198,7 +219,7 @@ export default function TrackingPage() {
                 {/* Radius Selector */}
                 <section>
                   <div className="flex justify-between items-center mb-6 px-1">
-                    <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground italic">Alert Threshold</h3>
+                    <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground italic">Alert Radius</h3>
                     <div className="px-3 py-1 bg-primary/10 rounded-lg"><span className="text-primary font-black text-xs italic tracking-widest">{formatDistance(alertRadius)}</span></div>
                   </div>
                   <div className="grid grid-cols-4 gap-3">
@@ -206,7 +227,7 @@ export default function TrackingPage() {
                       <button 
                         key={r} onClick={() => setAlertRadius(r)}
                         className={cn(
-                          "h-14 rounded-2xl text-[10px] font-black transition-all border-2 uppercase tracking-widest",
+                          "h-14 rounded-2xl text-[10px] font-black transition-all border-2 uppercase tracking-widest active-tap",
                           alertRadius === r ? "bg-primary border-primary text-white shadow-lg shadow-primary/20" : "bg-secondary/40 border-transparent text-muted-foreground hover:bg-secondary"
                         )}
                       >
@@ -226,27 +247,66 @@ export default function TrackingPage() {
                 {/* Quick Shortcuts */}
                 <section>
                   <div className="flex justify-between items-center mb-6 px-1">
-                    <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground italic">Saved Places</h3>
-                    <div className="h-px flex-1 bg-border mx-4"></div>
+                    <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground italic">Quick Actions</h3>
                   </div>
                   <div className="grid grid-cols-2 gap-4">
-                    <button className="flex items-center gap-4 p-6 bg-secondary/30 rounded-[32px] border border-primary/20/50 hover:bg-secondary transition-all shadow-sm">
+                    <button 
+                      onClick={() => {
+                        const home = savedPlaces.find(p => p.type === "home");
+                        if (home) selectPlace(home);
+                        else alert("Set Home in Settings or long-press map to save!");
+                      }}
+                      className="flex items-center gap-4 p-6 bg-secondary/30 rounded-[32px] border border-primary/10 hover:bg-secondary transition-all shadow-sm active-tap"
+                    >
                       <div className="w-12 h-12 bg-blue-500/10 rounded-[18px] flex items-center justify-center"><Star size={22} className="text-blue-500" fill="currentColor" fillOpacity={0.2} /></div>
                       <span className="text-[10px] font-black uppercase tracking-widest text-foreground">Home</span>
                     </button>
-                    <button className="flex items-center gap-4 p-6 bg-secondary/30 rounded-[32px] border border-primary/20/50 hover:bg-secondary transition-all shadow-sm">
+                    <button 
+                      onClick={() => {
+                        const office = savedPlaces.find(p => p.type === "office");
+                        if (office) selectPlace(office);
+                        else alert("Set Office in settings!");
+                      }}
+                      className="flex items-center gap-4 p-6 bg-secondary/30 rounded-[32px] border border-primary/10 hover:bg-secondary transition-all shadow-sm active-tap"
+                    >
                       <div className="w-12 h-12 bg-purple-500/10 rounded-[18px] flex items-center justify-center"><Clock size={22} className="text-purple-500" /></div>
                       <span className="text-[10px] font-black uppercase tracking-widest text-foreground">Office</span>
                     </button>
                   </div>
                 </section>
 
+                {/* Recent History */}
+                {recentPlaces.length > 0 && (
+                  <section>
+                    <div className="flex justify-between items-center mb-6 px-1">
+                      <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground italic">Recent Trips</h3>
+                    </div>
+                    <div className="space-y-3">
+                      {recentPlaces.map((place) => (
+                        <button
+                          key={place.id}
+                          onClick={() => selectPlace(place)}
+                          className="w-full flex items-center gap-4 p-5 bg-card border border-primary/10 rounded-[28px] hover:bg-secondary/30 transition-all active-tap"
+                        >
+                          <div className="w-10 h-10 bg-muted rounded-xl flex items-center justify-center text-muted-foreground">
+                            <MapIcon size={18} />
+                          </div>
+                          <div className="text-left flex-1 min-w-0">
+                            <p className="text-[11px] font-black uppercase tracking-widest truncate">{place.name}</p>
+                            <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest mt-0.5">Recently visited</p>
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  </section>
+                )}
+
                 {/* Info Card */}
                 <div className="p-8 bg-foreground text-background rounded-[40px] flex gap-6 items-center overflow-hidden relative shadow-2xl">
                   <div className="w-14 h-14 bg-background/20 backdrop-blur-md rounded-2xl flex items-center justify-center relative z-10 shadow-inner"><Bell size={28}/></div>
                   <div className="relative z-10">
-                    <p className="font-black italic uppercase leading-none text-lg tracking-tight">Sleep Confidently</p>
-                    <p className="text-[10px] font-black uppercase tracking-widest opacity-60 mt-2">Background Tracking Enabled</p>
+                    <p className="font-black italic uppercase leading-none text-lg tracking-tight">Smart Alert</p>
+                    <p className="text-[10px] font-black uppercase tracking-widest opacity-60 mt-2">Vibration and Sound enabled</p>
                   </div>
                   <Zap className="absolute -right-10 -bottom-10 w-40 h-40 text-background/5 -rotate-12" />
                 </div>
@@ -260,7 +320,7 @@ export default function TrackingPage() {
                 <div className="text-center">
                    <p className="text-[10px] font-black text-primary uppercase tracking-[0.4em] mb-4 italic">Navigating To</p>
                    <p className="text-4xl font-black tracking-tighter leading-none mb-3">{destinationName}</p>
-                   <p className="text-sm font-black text-muted-foreground uppercase tracking-widest">Alarm set at {formatDistance(alertRadius)}</p>
+                   <p className="text-sm font-black text-muted-foreground uppercase tracking-widest">Radius: {formatDistance(alertRadius)}</p>
                 </div>
                 <button onClick={handleStopAlarm} className="w-28 h-28 bg-rose-500 rounded-[40px] flex items-center justify-center shadow-[0_20px_50px_rgba(244,63,94,0.3)] active:scale-90 transition-all border-4 border-white/20"><Square fill="white" size={40}/></button>
               </div>
