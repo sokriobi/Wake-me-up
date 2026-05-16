@@ -12,7 +12,16 @@ export function useGeolocation() {
   const [location, setLocation] = useState<Location | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [permission, setPermission] = useState<PermissionState | null>(null);
+  const [isTracking, setIsTracking] = useState(false);
   const watchId = useRef<number | null>(null);
+
+  const stopTracking = useCallback(() => {
+    if (watchId.current !== null) {
+      navigator.geolocation.clearWatch(watchId.current);
+      watchId.current = null;
+      setIsTracking(false);
+    }
+  }, []);
 
   const startTracking = useCallback(() => {
     if (!navigator.geolocation) {
@@ -20,6 +29,10 @@ export function useGeolocation() {
       return;
     }
 
+    // Clear any existing watch
+    stopTracking();
+
+    setIsTracking(true);
     watchId.current = navigator.geolocation.watchPosition(
       (position) => {
         setLocation({
@@ -31,32 +44,27 @@ export function useGeolocation() {
       },
       (err) => {
         setError(err.message);
+        setIsTracking(false);
       },
       {
         enableHighAccuracy: true,
-        timeout: 10000,
+        timeout: 15000,
         maximumAge: 0,
       }
     );
-  }, []);
-
-  const stopTracking = useCallback(() => {
-    if (watchId.current !== null) {
-      navigator.geolocation.clearWatch(watchId.current);
-      watchId.current = null;
-    }
-  }, []);
+  }, [stopTracking]);
 
   useEffect(() => {
-    if ("permissions" in navigator) {
-      navigator.permissions.query({ name: "geolocation" }).then((result) => {
+    if (typeof window !== "undefined" && "permissions" in navigator) {
+      navigator.permissions.query({ name: "geolocation" as PermissionName }).then((result) => {
         setPermission(result.state);
         result.onchange = () => setPermission(result.state);
-      });
+      }).catch(e => console.error("Permission query failed", e));
     }
 
     return () => stopTracking();
   }, [stopTracking]);
 
-  return { location, error, permission, startTracking, stopTracking, isTracking: watchId.current !== null };
+  return { location, error, permission, startTracking, stopTracking, isTracking };
 }
+

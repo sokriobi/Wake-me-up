@@ -76,6 +76,13 @@ export default function TrackingPage() {
     await requestNotificationPermission().catch(console.error);
   };
 
+  // Auto-expand sheet when destination is picked
+  useEffect(() => {
+    if (destination && !isNavMode && sheetState === "compact") {
+      setSheetState("expanded");
+    }
+  }, [destination, isNavMode]);
+
   const mapCenter: [number, number] = useMemo(() => {
     if (followUser && location) return [location.latitude, location.longitude];
     if (destination) return destination;
@@ -132,12 +139,19 @@ export default function TrackingPage() {
                 <span className="text-[10px] font-black text-primary uppercase tracking-widest block mb-1">Live Tracking</span>
                 <p className="text-xl font-black truncate tracking-tighter">{destinationName}</p>
               </div>
-              {distance !== null && (
-                <div className="text-right shrink-0">
-                  <span className="text-2xl font-black italic tracking-tighter text-primary">{formatDistance(distance)}</span>
-                  <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground">Remaining</p>
-                </div>
-              )}
+              <div className="text-right shrink-0">
+                {distance !== null ? (
+                  <>
+                    <span className="text-2xl font-black italic tracking-tighter text-primary">{formatDistance(distance)}</span>
+                    <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground">Remaining</p>
+                  </>
+                ) : (
+                  <div className="flex items-center gap-2 text-muted-foreground">
+                    <Loader2 className="animate-spin" size={14} />
+                    <span className="text-[9px] font-black uppercase tracking-widest">Locating...</span>
+                  </div>
+                )}
+              </div>
             </div>
           </motion.div>
         )}
