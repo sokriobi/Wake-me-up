@@ -11,9 +11,13 @@ export default function Home() {
   const { savedPlaces, recentPlaces } = useSavedPlaces();
   const router = useRouter();
 
+  const [activeTab, setActiveTab] = useState<"saved" | "recent" | null>(null);
+
   const handleSelectPlace = (lat: number, lon: number, name: string) => {
     router.push(`/tracking?lat=${lat}&lon=${lon}&name=${encodeURIComponent(name)}`);
   };
+
+  const currentList = activeTab === "saved" ? savedPlaces : recentPlaces;
 
   return (
     <div className="min-h-[100dvh] bg-background text-foreground transition-colors duration-500">
@@ -78,31 +82,81 @@ export default function Home() {
           
           <div className="grid grid-rows-2 gap-5">
             <button 
-              onClick={() => {
-                if (savedPlaces.length > 0) handleSelectPlace(savedPlaces[0].coords[0], savedPlaces[0].coords[1], savedPlaces[0].name);
-                else alert("Save a place in Tracking settings first!");
-              }}
-              className="flex items-center gap-4 p-5 bg-secondary/80 border border-primary/20/10 rounded-[28px] hover:bg-secondary transition-all group shadow-sm active-tap"
+              onClick={() => setActiveTab(activeTab === "saved" ? null : "saved")}
+              className={cn(
+                "flex items-center gap-4 p-5 rounded-[28px] transition-all group shadow-sm active-tap border-2",
+                activeTab === "saved" ? "bg-primary border-primary" : "bg-secondary/80 border-transparent"
+              )}
             >
-              <div className="w-10 h-10 rounded-xl bg-yellow-500/10 flex items-center justify-center group-hover:scale-110 transition-transform">
-                <Star size={20} className="text-yellow-600" fill="currentColor" />
+              <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center transition-transform", activeTab === "saved" ? "bg-white/20" : "bg-yellow-500/10")}>
+                <Star size={20} className={activeTab === "saved" ? "text-white" : "text-yellow-600"} fill="currentColor" />
               </div>
-              <span className="font-black text-[10px] uppercase tracking-widest text-foreground">Saved</span>
+              <span className={cn("font-black text-[10px] uppercase tracking-widest", activeTab === "saved" ? "text-white" : "text-foreground")}>Saved</span>
             </button>
             <button 
-              onClick={() => {
-                if (recentPlaces.length > 0) handleSelectPlace(recentPlaces[0].coords[0], recentPlaces[0].coords[1], recentPlaces[0].name);
-                else alert("No recent history yet!");
-              }}
-              className="flex items-center gap-4 p-5 bg-secondary/80 border border-primary/20/10 rounded-[28px] hover:bg-secondary transition-all group shadow-sm active-tap"
+              onClick={() => setActiveTab(activeTab === "recent" ? null : "recent")}
+              className={cn(
+                "flex items-center gap-4 p-5 rounded-[28px] transition-all group shadow-sm active-tap border-2",
+                activeTab === "recent" ? "bg-primary border-primary" : "bg-secondary/80 border-transparent"
+              )}
             >
-              <div className="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center group-hover:scale-110 transition-transform">
-                <Clock size={20} className="text-blue-600" />
+              <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center transition-transform", activeTab === "recent" ? "bg-white/20" : "bg-blue-500/10")}>
+                <Clock size={20} className={activeTab === "recent" ? "text-white" : "text-blue-600"} />
               </div>
-              <span className="font-black text-[10px] uppercase tracking-widest text-foreground">Recent</span>
+              <span className={cn("font-black text-[10px] uppercase tracking-widest", activeTab === "recent" ? "text-white" : "text-foreground")}>Recent</span>
             </button>
           </div>
         </section>
+
+        {/* Dynamic List Section */}
+        <AnimatePresence mode="wait">
+          {activeTab && (
+            <motion.section
+              key={activeTab}
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              className="mb-12 overflow-hidden"
+            >
+              <div className="flex justify-between items-center mb-8">
+                <h2 className="text-[10px] font-black uppercase tracking-[0.3em] text-primary italic">
+                  {activeTab === "saved" ? "Your Favorites" : "Recent Trips"}
+                </h2>
+                <div className="h-[2px] flex-1 bg-primary/10 mx-4"></div>
+              </div>
+              
+              <div className="space-y-4">
+                {currentList.length === 0 ? (
+                  <div className="text-center py-12 bg-secondary/30 rounded-[40px] border-2 border-dashed border-primary/10">
+                    <p className="text-[10px] text-muted-foreground font-black uppercase tracking-widest leading-loose">
+                      No {activeTab} places found.<br/>
+                      <span className="text-primary italic">Start a journey to add some!</span>
+                    </p>
+                  </div>
+                ) : (
+                  currentList.map((place, i) => (
+                    <motion.div
+                      initial={{ opacity: 0, x: -10 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: i * 0.05 }}
+                      key={place.id}
+                      onClick={() => handleSelectPlace(place.coords[0], place.coords[1], place.name)}
+                      className="flex items-center p-6 bg-card border border-primary/20 rounded-[32px] hover:border-primary transition-all cursor-pointer group shadow-sm active-tap"
+                    >
+                      <div className="w-12 h-12 rounded-2xl bg-secondary flex items-center justify-center mr-5 group-hover:bg-primary group-hover:text-white transition-all">
+                        {activeTab === "saved" ? <Star size={20} className="text-yellow-500" fill="currentColor" /> : <Clock size={20} className="text-blue-500" />}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-black text-foreground truncate text-lg tracking-tight uppercase">{place.name}</h3>
+                        <p className="text-[10px] text-muted-foreground font-bold truncate mt-1 tracking-widest">{place.address}</p>
+                      </div>
+                    </motion.div>
+                  ))
+                )}
+              </div>
+            </motion.section>
+          )}
+        </AnimatePresence>
 
         {/* Recent Destinations */}
         <section className="mb-12">
