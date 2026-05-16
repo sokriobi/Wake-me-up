@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
-import { Search, MapPin, Loader2, X, CircleDot, ArrowDown, Crosshair, Navigation, Plane, Train, Building2, Map as MapIcon } from "lucide-react";
+import { Search, MapPin, Loader2, X, CircleDot, ArrowDown, Crosshair, Navigation, Plane, Train, Building2, Map as MapIcon, ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface SearchResult {
@@ -43,24 +43,13 @@ export function RouteSearch({
     }
     setLoading(true);
     try {
-      // Nominatim search with specific parameters for Bangladesh
       const response = await fetch(
-        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(q)}&countrycodes=bd&limit=10&addressdetails=1&featuretype=settlement,railway,aeroway,highway,amenity`
+        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(q)}&countrycodes=bd&limit=10&addressdetails=1`
       );
       const data = await response.json();
       
       if (Array.isArray(data)) {
-        // Priority sorting for Bangladesh context
-        const sorted = data.sort((a, b) => {
-          const nameA = a.display_name.toLowerCase();
-          const nameB = b.display_name.toLowerCase();
-          const term = q.toLowerCase();
-          
-          if (nameA.startsWith(term) && !nameB.startsWith(term)) return -1;
-          if (!nameA.startsWith(term) && nameB.startsWith(term)) return 1;
-          return 0;
-        });
-        setResults(sorted);
+        setResults(data);
       } else {
         setResults([]);
       }
@@ -77,17 +66,17 @@ export function RouteSearch({
       if (activeField) {
         fetchResults(query);
       }
-    }, 300);
+    }, 400);
     return () => clearTimeout(timer);
   }, [query, activeField, fetchResults]);
 
   const getPlaceIcon = (item: SearchResult) => {
     const cls = (item.class || "").toLowerCase();
     const type = (item.type || "").toLowerCase();
-    if (cls.includes("aeroway") || type.includes("airport")) return <Plane className="text-blue-500" size={16} />;
-    if (cls.includes("railway") || type.includes("station")) return <Train className="text-orange-500" size={16} />;
-    if (cls.includes("highway") || type.includes("bus")) return <MapIcon className="text-green-500" size={16} />;
-    return <Building2 className="text-gray-400" size={16} />;
+    if (cls.includes("aeroway") || type.includes("airport")) return <Plane className="text-blue-500" size={18} />;
+    if (cls.includes("railway") || type.includes("station")) return <Train className="text-orange-500" size={18} />;
+    if (cls.includes("highway") || type.includes("bus")) return <MapIcon className="text-green-500" size={18} />;
+    return <Building2 className="text-indigo-400" size={18} />;
   };
 
   const handleMyLocation = (e: React.MouseEvent, field: "from" | "to") => {
@@ -104,16 +93,16 @@ export function RouteSearch({
   };
 
   return (
-    <div className="w-full bg-white dark:bg-[#1a1a1a] rounded-3xl p-4 shadow-2xl space-y-3 relative z-[300] border border-gray-200 dark:border-white/10">
+    <div className="w-full bg-card/95 backdrop-blur-xl rounded-[32px] p-5 shadow-[0_20px_50px_rgba(0,0,0,0.2)] border border-border/50 space-y-4 relative z-[300]">
       {/* From Field */}
-      <div className="relative">
-        <div className="absolute left-4 top-1/2 -translate-y-1/2">
-          <CircleDot className="text-blue-600" size={18} />
+      <div className="relative group">
+        <div className="absolute left-4 top-1/2 -translate-y-1/2 z-10">
+          <CircleDot className="text-blue-500 group-focus-within:text-blue-400" size={20} />
         </div>
         <input
           type="text"
-          placeholder="Starting point"
-          className="w-full h-12 pl-12 pr-12 bg-gray-100 dark:bg-white/5 border-none rounded-2xl focus:ring-2 focus:ring-blue-500/50 text-sm"
+          placeholder="Pick-up point"
+          className="w-full h-14 pl-12 pr-12 bg-secondary/50 border-2 border-transparent focus:border-blue-500/20 focus:bg-background rounded-2xl transition-all text-base font-bold text-foreground placeholder:text-muted-foreground/50"
           value={activeField === "from" ? query : fromName || ""}
           onChange={(e) => {
             setQuery(e.target.value);
@@ -127,29 +116,29 @@ export function RouteSearch({
         <button 
           onClick={(e) => handleMyLocation(e, "from")}
           className={cn(
-            "absolute right-4 top-1/2 -translate-y-1/2 p-2 rounded-full",
-            currentLocation ? "text-blue-600" : "text-gray-400 animate-pulse"
+            "absolute right-3 top-1/2 -translate-y-1/2 p-2 rounded-xl transition-all",
+            currentLocation ? "text-blue-500 bg-blue-500/10" : "text-muted-foreground bg-secondary"
           )}
         >
-          <Crosshair size={18} />
+          <Crosshair size={20} />
         </button>
       </div>
 
-      <div className="flex justify-center -my-3 relative z-10">
-        <div className="bg-white dark:bg-[#1a1a1a] p-1 rounded-full border border-gray-100 dark:border-white/10">
-          <ArrowDown size={14} className="text-gray-400" />
+      <div className="flex justify-center -my-6 relative z-10 pointer-events-none">
+        <div className="bg-background p-1.5 rounded-full border border-border shadow-md">
+          <ChevronDown size={14} className="text-muted-foreground" />
         </div>
       </div>
 
       {/* To Field */}
-      <div className="relative">
-        <div className="absolute left-4 top-1/2 -translate-y-1/2">
-          <MapPin className="text-red-600" size={18} />
+      <div className="relative group">
+        <div className="absolute left-4 top-1/2 -translate-y-1/2 z-10">
+          <MapPin className="text-rose-500 group-focus-within:text-rose-400" size={20} />
         </div>
         <input
           type="text"
-          placeholder="Destination"
-          className="w-full h-12 pl-12 pr-12 bg-gray-100 dark:bg-white/5 border-none rounded-2xl focus:ring-2 focus:ring-red-500/50 text-sm"
+          placeholder="Where to?"
+          className="w-full h-14 pl-12 pr-12 bg-secondary/50 border-2 border-transparent focus:border-rose-500/20 focus:bg-background rounded-2xl transition-all text-base font-bold text-foreground placeholder:text-muted-foreground/50"
           value={activeField === "to" ? query : toName || ""}
           onChange={(e) => {
             setQuery(e.target.value);
@@ -163,36 +152,36 @@ export function RouteSearch({
         <button 
           onClick={(e) => handleMyLocation(e, "to")}
           className={cn(
-            "absolute right-4 top-1/2 -translate-y-1/2 p-2 rounded-full",
-            currentLocation ? "text-red-600" : "text-gray-400 animate-pulse"
+            "absolute right-3 top-1/2 -translate-y-1/2 p-2 rounded-xl transition-all",
+            currentLocation ? "text-rose-500 bg-rose-500/10" : "text-muted-foreground bg-secondary"
           )}
         >
-          <Crosshair size={18} />
+          <Crosshair size={20} />
         </button>
       </div>
 
-      {/* Results */}
+      {/* Results Dropdown */}
       {activeField && (query.length > 0 || loading) && (
         <div 
           ref={dropdownRef}
-          className="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-[#242424] border border-gray-200 dark:border-white/10 rounded-2xl overflow-hidden shadow-2xl z-[301] max-h-72 overflow-y-auto"
+          className="absolute top-full left-0 right-0 mt-3 bg-card border border-border rounded-[28px] overflow-hidden shadow-[0_30px_60px_rgba(0,0,0,0.3)] z-[301] max-h-80 overflow-y-auto animate-in fade-in slide-in-from-top-2 duration-200"
         >
           {loading ? (
-            <div className="p-8 flex flex-col items-center gap-3">
-              <Loader2 className="animate-spin text-blue-600" />
-              <span className="text-[10px] uppercase font-bold tracking-widest text-gray-400">Searching...</span>
+            <div className="p-10 flex flex-col items-center gap-4">
+              <Loader2 className="animate-spin text-primary" size={24} />
+              <span className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground">Searching</span>
             </div>
           ) : (
             <div className="py-2">
               {results.length === 0 ? (
-                <div className="p-8 text-center text-gray-500 text-sm italic">
-                  No places found for "{query}"
+                <div className="p-10 text-center text-muted-foreground font-medium">
+                  No matches for <span className="text-foreground">"{query}"</span>
                 </div>
               ) : (
                 results.map((r) => (
                   <button
                     key={r.place_id}
-                    className="w-full px-5 py-4 flex items-start gap-4 hover:bg-gray-50 dark:hover:bg-white/5 text-left border-b border-gray-100 dark:border-white/5 last:border-0 group"
+                    className="w-full px-6 py-4 flex items-start gap-4 hover:bg-secondary transition-all text-left border-b border-border/50 last:border-0 group"
                     onClick={() => {
                       const name = r.display_name.split(",")[0];
                       if (activeField === "from") onSelectFrom(parseFloat(r.lat), parseFloat(r.lon), name);
@@ -201,13 +190,13 @@ export function RouteSearch({
                       setQuery("");
                     }}
                   >
-                    <div className="w-10 h-10 rounded-xl bg-gray-100 dark:bg-white/5 flex items-center justify-center shrink-0 group-hover:bg-blue-100 dark:group-hover:bg-blue-900/30 transition-colors">
+                    <div className="w-12 h-12 rounded-2xl bg-secondary flex items-center justify-center shrink-0 group-hover:bg-primary/20 transition-colors">
                       {getPlaceIcon(r)}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-bold truncate">{r.display_name.split(",")[0]}</p>
-                      <p className="text-[10px] text-gray-500 dark:text-gray-400 truncate mt-0.5 uppercase tracking-tight">
-                        {r.display_name.split(",").slice(1, 3).join(", ")}
+                      <p className="text-base font-black truncate text-foreground">{r.display_name.split(",")[0]}</p>
+                      <p className="text-xs text-muted-foreground truncate mt-1 font-medium">
+                        {r.display_name.split(",").slice(1).join(", ")}
                       </p>
                     </div>
                   </button>
@@ -220,3 +209,4 @@ export function RouteSearch({
     </div>
   );
 }
+
