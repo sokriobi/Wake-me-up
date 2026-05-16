@@ -30,10 +30,9 @@ export function useAlarm() {
       new Notification("WakeMe Alarm", {
         body: message,
         icon: "/icons/icon-192x192.png",
-        vibrate: [500, 200, 500],
         tag: "destination-alarm",
         requireInteraction: true
-      } as any);
+      });
     }
 
     // 4. Voice Alert

@@ -11,15 +11,21 @@ export interface SavedPlace {
 }
 
 export function useSavedPlaces() {
-  const [savedPlaces, setSavedPlaces] = useState<SavedPlace[]>([]);
-  const [recentPlaces, setRecentPlaces] = useState<SavedPlace[]>([]);
+  const [savedPlaces, setSavedPlaces] = useState<SavedPlace[]>(() => {
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("saved_places");
+      return saved ? JSON.parse(saved) : [];
+    }
+    return [];
+  });
 
-  useEffect(() => {
-    const saved = localStorage.getItem("saved_places");
-    const recent = localStorage.getItem("recent_places");
-    if (saved) setSavedPlaces(JSON.parse(saved));
-    if (recent) setRecentPlaces(JSON.parse(recent));
-  }, []);
+  const [recentPlaces, setRecentPlaces] = useState<SavedPlace[]>(() => {
+    if (typeof window !== "undefined") {
+      const recent = localStorage.getItem("recent_places");
+      return recent ? JSON.parse(recent) : [];
+    }
+    return [];
+  });
 
   const savePlace = (place: Omit<SavedPlace, "id">) => {
     const newPlace = { ...place, id: Date.now().toString() };

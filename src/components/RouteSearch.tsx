@@ -206,7 +206,7 @@ export function RouteSearch({
               {results.length === 0 ? (
                 <div className="p-12 text-center text-muted-foreground font-black uppercase text-[10px] tracking-widest leading-loose">
                   No matches for<br/>
-                  <span className="text-foreground text-sm italic">"{query}"</span>
+                  <span className="text-foreground text-sm italic">&quot;{query}&quot;</span>
                 </div>
               ) : (
                 results.map((r, i) => (

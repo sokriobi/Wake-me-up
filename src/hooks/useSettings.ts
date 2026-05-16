@@ -17,18 +17,19 @@ const DEFAULT_SETTINGS: AppSettings = {
 };
 
 export function useSettings() {
-  const [settings, setSettings] = useState<AppSettings>(DEFAULT_SETTINGS);
-
-  useEffect(() => {
-    const saved = localStorage.getItem("app_settings");
-    if (saved) {
-      try {
-        setSettings(JSON.parse(saved));
-      } catch (e) {
-        console.error("Failed to parse settings", e);
+  const [settings, setSettings] = useState<AppSettings>(() => {
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("app_settings");
+      if (saved) {
+        try {
+          return JSON.parse(saved);
+        } catch (e) {
+          console.error("Failed to parse settings", e);
+        }
       }
     }
-  }, []);
+    return DEFAULT_SETTINGS;
+  });
 
   const updateSettings = (updates: Partial<AppSettings>) => {
     const newSettings = { ...settings, ...updates };

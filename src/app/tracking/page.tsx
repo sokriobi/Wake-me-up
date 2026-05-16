@@ -32,31 +32,32 @@ export default function TrackingPage() {
   const [destinationName, setDestinationName] = useState<string | null>(null);
   const [alertRadius, setAlertRadius] = useState(500);
   const [isAlarmActive, setIsAlarmActive] = useState(false);
-  const [distance, setDistance] = useState<number | null>(null);
+  
+  const distance = useMemo(() => {
+    const target = destination;
+    const source = location ? [location.latitude, location.longitude] : null;
+    if (source && target) {
+      return calculateDistance(source[0], source[1], target[0], target[1]);
+    }
+    return null;
+  }, [location, destination]);
+
   const [isNavMode, setIsNavMode] = useState(false);
   const [followUser, setFollowUser] = useState(true);
   const [sheetState, setSheetState] = useState<"compact" | "expanded">("compact");
 
-  // Sync distance and check for alarm
+  // Check for alarm
   useEffect(() => {
-    const target = destination;
-    const source = location ? [location.latitude, location.longitude] : null;
-
-    if (source && target) {
-      const d = calculateDistance(source[0], source[1], target[0], target[1]);
-      setDistance(d);
-
-      if (d <= alertRadius && !isAlarmActive && isTracking) {
-        setIsAlarmActive(true);
-        triggerAlarm(`Approaching stop: ${destinationName || "Destination"}`);
-        
-        // Haptic feedback if enabled
-        if (settings.vibrate && "vibrate" in navigator) {
-          navigator.vibrate([500, 300, 500, 300, 500]);
-        }
+    if (distance !== null && distance <= alertRadius && !isAlarmActive && isTracking) {
+      setIsAlarmActive(true);
+      triggerAlarm(`Approaching stop: ${destinationName || "Destination"}`);
+      
+      // Haptic feedback if enabled
+      if (settings.vibrate && "vibrate" in navigator) {
+        navigator.vibrate([500, 300, 500, 300, 500]);
       }
     }
-  }, [location, destination, alertRadius, isAlarmActive, triggerAlarm, isTracking, destinationName, settings.vibrate]);
+  }, [distance, alertRadius, isAlarmActive, triggerAlarm, isTracking, destinationName, settings.vibrate]);
 
   const handleStopAlarm = () => {
     setIsAlarmActive(false);
@@ -94,9 +95,10 @@ export default function TrackingPage() {
   // Auto-expand sheet when destination is picked
   useEffect(() => {
     if (destination && !isNavMode && sheetState === "compact") {
-      setSheetState("expanded");
+      const timer = setTimeout(() => setSheetState("expanded"), 0);
+      return () => clearTimeout(timer);
     }
-  }, [destination, isNavMode]);
+  }, [destination, isNavMode, sheetState]);
 
   const mapCenter: [number, number] = useMemo(() => {
     if (followUser && location) return [location.latitude, location.longitude];

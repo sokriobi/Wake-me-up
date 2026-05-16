@@ -77,7 +77,8 @@ export default function Map({ center, destination, userLocation, startPoint, rad
   const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
-    setIsMounted(true);
+    const timer = setTimeout(() => setIsMounted(true), 0);
+    return () => clearTimeout(timer);
   }, []);
 
   if (!isMounted) return <div className="w-full h-full bg-[#1a1a1a] animate-pulse" />;
