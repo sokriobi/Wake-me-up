@@ -20,7 +20,11 @@ const Map = dynamic(() => import("@/components/Map"), {
 const RADIUS_OPTIONS = [200, 500, 1000, 2000];
 const BD_CENTER: [number, number] = [23.8103, 90.4125];
 
-export default function TrackingPage() {
+import { useSearchParams } from "next/navigation";
+import { Suspense } from "react";
+
+function TrackingContent() {
+  const searchParams = useSearchParams();
   const { location, error, startTracking, stopTracking, isTracking } = useGeolocation();
   const { triggerAlarm, stopAlarm, requestNotificationPermission } = useAlarm();
   const { settings } = useSettings();
@@ -91,6 +95,20 @@ export default function TrackingPage() {
     setFollowUser(false);
     setSheetState("compact");
   };
+
+  // Load from URL params
+  useEffect(() => {
+    const lat = searchParams.get("lat");
+    const lon = searchParams.get("lon");
+    const name = searchParams.get("name");
+    
+    if (lat && lon && name) {
+      setDestination([parseFloat(lat), parseFloat(lon)]);
+      setDestinationName(name);
+      setFollowUser(false);
+      setSheetState("compact");
+    }
+  }, [searchParams]);
 
   // Auto-expand sheet when destination is picked
   useEffect(() => {
@@ -353,5 +371,13 @@ export default function TrackingPage() {
         </div>
       )}
     </div>
+  );
+}
+
+export default function TrackingPage() {
+  return (
+    <Suspense fallback={<div className="h-screen w-full bg-background flex items-center justify-center"><Loader2 className="animate-spin text-primary" size={40} /></div>}>
+      <TrackingContent />
+    </Suspense>
   );
 }

@@ -3,21 +3,17 @@
 import { useState, useEffect } from "react";
 import { Search, MapPin, Star, History, Bell, Navigation, Zap, ShieldCheck, Clock, Moon, Sun } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import Link from "next/link";
-import { cn } from "@/lib/utils";
+import { useSavedPlaces } from "@/hooks/useSavedPlaces";
+import { useRouter } from "next/navigation";
 
 export default function Home() {
   const [search, setSearch] = useState("");
-  const [favorites, setFavorites] = useState<{id: number, name: string, address: string}[]>([]);
-  const [recentStops, setRecentStops] = useState<{id: number, name: string, address: string}[]>([]);
+  const { savedPlaces, recentPlaces } = useSavedPlaces();
+  const router = useRouter();
 
-  useEffect(() => {
-    const savedFavs = localStorage.getItem("favorites");
-    if (savedFavs) setFavorites(JSON.parse(savedFavs));
-    
-    const savedRecents = localStorage.getItem("recent_destinations");
-    if (savedRecents) setRecentStops(JSON.parse(savedRecents));
-  }, []);
+  const handleSelectPlace = (lat: number, lon: number, name: string) => {
+    router.push(`/tracking?lat=${lat}&lon=${lon}&name=${encodeURIComponent(name)}`);
+  };
 
   return (
     <div className="min-h-[100dvh] bg-background text-foreground transition-colors duration-500">
@@ -81,17 +77,29 @@ export default function Home() {
           </Link>
           
           <div className="grid grid-rows-2 gap-5">
-            <button className="flex items-center gap-4 p-5 bg-secondary/80 border border-primary/20 rounded-[28px] hover:bg-secondary transition-all group shadow-sm">
+            <button 
+              onClick={() => {
+                if (savedPlaces.length > 0) handleSelectPlace(savedPlaces[0].coords[0], savedPlaces[0].coords[1], savedPlaces[0].name);
+                else alert("Save a place in Tracking settings first!");
+              }}
+              className="flex items-center gap-4 p-5 bg-secondary/80 border border-primary/20/10 rounded-[28px] hover:bg-secondary transition-all group shadow-sm active-tap"
+            >
               <div className="w-10 h-10 rounded-xl bg-yellow-500/10 flex items-center justify-center group-hover:scale-110 transition-transform">
                 <Star size={20} className="text-yellow-600" fill="currentColor" />
               </div>
-              <span className="font-black text-xs uppercase tracking-widest text-foreground">Saved</span>
+              <span className="font-black text-[10px] uppercase tracking-widest text-foreground">Saved</span>
             </button>
-            <button className="flex items-center gap-4 p-5 bg-secondary/80 border border-primary/20 rounded-[28px] hover:bg-secondary transition-all group shadow-sm">
+            <button 
+              onClick={() => {
+                if (recentPlaces.length > 0) handleSelectPlace(recentPlaces[0].coords[0], recentPlaces[0].coords[1], recentPlaces[0].name);
+                else alert("No recent history yet!");
+              }}
+              className="flex items-center gap-4 p-5 bg-secondary/80 border border-primary/20/10 rounded-[28px] hover:bg-secondary transition-all group shadow-sm active-tap"
+            >
               <div className="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center group-hover:scale-110 transition-transform">
                 <Clock size={20} className="text-blue-600" />
               </div>
-              <span className="font-black text-xs uppercase tracking-widest text-foreground">Recent</span>
+              <span className="font-black text-[10px] uppercase tracking-widest text-foreground">Recent</span>
             </button>
           </div>
         </section>
@@ -110,23 +118,24 @@ export default function Home() {
           
           <div className="space-y-4">
             <AnimatePresence mode="popLayout">
-              {recentStops.length === 0 ? (
+              {recentPlaces.length === 0 ? (
                 <motion.div 
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
-                  className="text-center py-16 bg-secondary/30 rounded-[40px] border border-dashed border-primary/20"
+                  className="text-center py-16 bg-secondary/30 rounded-[40px] border border-dashed border-primary/20/10"
                 >
                   <p className="text-xs text-muted-foreground font-black uppercase tracking-widest">No trip history found</p>
                 </motion.div>
               ) : (
-                recentStops.map((dest, i) => (
+                recentPlaces.map((dest, i) => (
                   <motion.div
                     layout
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: i * 0.05 }}
                     key={dest.id}
-                    className="flex items-center p-6 bg-secondary/50 border border-primary/20/50 rounded-[32px] hover:bg-secondary hover:border-primary/20 transition-all cursor-pointer group shadow-sm"
+                    onClick={() => handleSelectPlace(dest.coords[0], dest.coords[1], dest.name)}
+                    className="flex items-center p-6 bg-secondary/50 border border-primary/20/50 rounded-[32px] hover:bg-secondary hover:border-primary/20 transition-all cursor-pointer group shadow-sm active-tap"
                   >
                     <div className="w-12 h-12 rounded-2xl bg-background flex items-center justify-center mr-5 group-hover:bg-primary group-hover:text-white transition-all shadow-inner">
                       <MapPin size={22} className="text-muted-foreground group-hover:text-white transition-colors" />
