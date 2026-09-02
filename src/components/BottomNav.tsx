@@ -21,13 +21,14 @@ export function BottomNav({ theme, onToggleTheme }: BottomNavProps) {
   ];
 
   return (
-    <nav className="fixed bottom-8 left-1/2 -translate-x-1/2 w-[92%] max-w-md h-24 bg-card/90 backdrop-blur-3xl border border-primary/20/50 rounded-[44px] flex items-center justify-around px-4 shadow-[0_25px_80px_rgba(0,0,0,0.2)] z-[100] active-tap">
+    <nav aria-label="Main navigation" className="fixed bottom-4 sm:bottom-8 left-1/2 -translate-x-1/2 w-[calc(100%-2rem)] max-w-md h-20 sm:h-24 bg-card/90 backdrop-blur-3xl border border-primary/20/50 rounded-[32px] sm:rounded-[44px] flex items-center justify-around px-2 sm:px-4 pb-[env(safe-area-inset-bottom)] shadow-[0_25px_80px_rgba(0,0,0,0.2)] z-[100]">
       {navItems.map((item) => {
         const isActive = pathname === item.href;
         return (
           <Link
             key={item.label}
             href={item.href}
+            aria-current={isActive ? "page" : undefined}
             className="relative flex flex-col items-center justify-center w-20 h-20 group outline-none"
           >
             {isActive && (

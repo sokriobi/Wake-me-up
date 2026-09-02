@@ -76,14 +76,15 @@ function TrackingContent() {
     setIsStarting(true);
     prepareAudio();
     await requestNotificationPermission().catch(console.error);
-    const hasLocation = await startTracking();
-    if (!hasLocation) {
+    const initialLocation = await startTracking();
+    if (!initialLocation) {
       setIsStarting(false);
       return;
     }
     setIsNavMode(true);
     setFollowUser(true);
     setSheetState("compact");
+    setStartPoint([initialLocation.latitude, initialLocation.longitude]);
     
     // Add to recent history
     addRecent({
@@ -127,12 +128,6 @@ function TrackingContent() {
       return () => clearTimeout(timer);
     }
   }, [destination, isNavMode, sheetState]);
-
-  useEffect(() => {
-    if (isNavMode && location && !startPoint) {
-      setStartPoint([location.latitude, location.longitude]);
-    }
-  }, [isNavMode, location, startPoint]);
 
   const mapCenter: [number, number] = useMemo(() => {
     if (followUser && location) return [location.latitude, location.longitude];
@@ -218,6 +213,7 @@ function TrackingContent() {
       <div className="absolute right-5 bottom-[40dvh] z-30 flex flex-col gap-4">
         <button 
           onClick={() => setFollowUser(!followUser)}
+          aria-label={followUser ? "Stop following my location" : "Follow my location"}
           className={cn(
             "w-14 h-14 rounded-2xl flex items-center justify-center shadow-2xl transition-all border active-tap",
             followUser ? "bg-primary text-white border-primary shadow-primary/20" : "bg-card text-foreground border-primary/20"
@@ -255,7 +251,10 @@ function TrackingContent() {
                 {/* Radius Selector */}
                 <section>
                   <div className="flex justify-between items-center mb-6 px-1">
-                    <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground italic">Alert Radius</h3>
+                    <div>
+                      <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground italic">Alert Radius</h3>
+                      <p className="text-[10px] text-muted-foreground/70 mt-1">Wake me before I reach the stop</p>
+                    </div>
                     <div className="px-3 py-1 bg-primary/10 rounded-lg"><span className="text-primary font-black text-xs italic tracking-widest">{formatDistance(alertRadius)}</span></div>
                   </div>
                   <div className="grid grid-cols-4 gap-3">
@@ -272,6 +271,11 @@ function TrackingContent() {
                     ))}
                   </div>
                 </section>
+
+                <div className="rounded-3xl border border-primary/10 bg-primary/5 px-5 py-4 flex items-center gap-3">
+                  <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 shadow-[0_0_0_5px_rgba(16,185,129,0.12)]" />
+                  <p className="text-[10px] font-black uppercase tracking-widest text-foreground">Ready to track {destinationName ? `to ${destinationName}` : "your trip"}</p>
+                </div>
 
                 <button 
                   onClick={handleStart} disabled={!destination || isStarting}

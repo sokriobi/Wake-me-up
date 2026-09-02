@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { Search, MapPin, Star, History, Bell, Navigation, Zap, ShieldCheck, Clock, Moon, Sun } from "lucide-react";
+import { useState } from "react";
+import { Search, MapPin, Star, Bell, Navigation, Zap, ShieldCheck, Clock } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import { useSavedPlaces } from "@/hooks/useSavedPlaces";
@@ -19,7 +19,10 @@ export default function Home() {
     router.push(`/tracking?lat=${lat}&lon=${lon}&name=${encodeURIComponent(name)}`);
   };
 
-  const currentList = activeTab === "saved" ? savedPlaces : recentPlaces;
+  const currentList = (activeTab === "saved" ? savedPlaces : recentPlaces).filter((place) =>
+    place.name.toLowerCase().includes(search.toLowerCase()) ||
+    place.address.toLowerCase().includes(search.toLowerCase())
+  );
 
   return (
     <div className="min-h-[100dvh] bg-background text-foreground transition-colors duration-500">
@@ -34,14 +37,14 @@ export default function Home() {
             </h1>
             <p className="text-muted-foreground font-bold text-xs uppercase tracking-[0.2em] mt-1">Transit Intelligence</p>
           </motion.div>
-          <motion.button 
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="w-12 h-12 rounded-2xl bg-secondary border border-primary/20 flex items-center justify-center relative shadow-sm"
+          <Link
+            href="/settings"
+            aria-label="Open settings"
+            className="w-12 h-12 rounded-2xl bg-secondary border border-primary/20 flex items-center justify-center relative shadow-sm active-tap"
           >
             <Bell size={20} className="text-foreground" />
             <span className="absolute top-3 right-3 w-2 h-2 bg-rose-500 rounded-full border-2 border-background"></span>
-          </motion.button>
+          </Link>
         </header>
 
         {/* Search Bar */}
@@ -56,7 +59,8 @@ export default function Home() {
           </div>
           <input
             type="text"
-            placeholder="Search stops or routes..."
+            placeholder="Search saved destinations..."
+            aria-label="Search saved destinations"
             className="w-full h-16 pl-14 pr-4 bg-secondary/80 backdrop-blur-md border-2 border-transparent focus:border-primary/20 rounded-[28px] focus:outline-none transition-all text-lg font-bold text-foreground placeholder:text-muted-foreground/40 shadow-sm"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
@@ -65,7 +69,7 @@ export default function Home() {
 
         {/* Hero Actions */}
         <section className="grid grid-cols-2 gap-5 mb-12">
-          <Link href="/tracking" className="relative overflow-hidden group">
+          <Link href="/tracking" className="relative overflow-hidden group" aria-label="Start live tracking">
             <motion.div 
               whileHover={{ scale: 0.98 }}
               whileTap={{ scale: 0.95 }}
@@ -131,7 +135,7 @@ export default function Home() {
                 {currentList.length === 0 ? (
                   <div className="text-center py-12 bg-secondary/30 rounded-[40px] border-2 border-dashed border-primary/10">
                     <p className="text-[10px] text-muted-foreground font-black uppercase tracking-widest leading-loose">
-                      No {activeTab} places found.<br/>
+                        No matching {activeTab} places found.<br/>
                       <span className="text-primary italic">Start a journey to add some!</span>
                     </p>
                   </div>

@@ -31,17 +31,17 @@ export function useGeolocation() {
     }
   }, []);
 
-  const startTracking = useCallback((): Promise<boolean> => {
+  const startTracking = useCallback((): Promise<Location | null> => {
     if (!Capacitor.isNativePlatform() && !navigator.geolocation) {
       setError("Geolocation is not supported by your browser.");
-      return Promise.resolve(false);
+      return Promise.resolve(null);
     }
 
     // Clear any existing watch
     stopTracking();
 
     setIsTracking(true);
-    return new Promise<boolean>(async (resolve) => {
+    return new Promise<Location | null>(async (resolve) => {
       let firstUpdate = true;
       const onSuccess = (position: { coords: { latitude: number; longitude: number; accuracy: number } }) => {
           setLocation({
@@ -52,7 +52,11 @@ export function useGeolocation() {
           setError(null);
           if (firstUpdate) {
             firstUpdate = false;
-            resolve(true);
+            resolve({
+              latitude: position.coords.latitude,
+              longitude: position.coords.longitude,
+              accuracy: position.coords.accuracy,
+            });
           }
       };
       const onError = (err: { message: string }) => {
@@ -60,7 +64,7 @@ export function useGeolocation() {
           setIsTracking(false);
           if (firstUpdate) {
             firstUpdate = false;
-            resolve(false);
+            resolve(null);
           }
       };
 
