@@ -25,9 +25,9 @@ import { Suspense } from "react";
 
 function TrackingContent() {
   const searchParams = useSearchParams();
-  const { location, error, startTracking, stopTracking, isTracking } = useGeolocation();
-  const { triggerAlarm, stopAlarm, requestNotificationPermission } = useAlarm();
   const { settings } = useSettings();
+  const { location, error, startTracking, stopTracking, isTracking } = useGeolocation();
+  const { triggerAlarm, stopAlarm, prepareAudio, requestNotificationPermission } = useAlarm(settings);
   const { savedPlaces, recentPlaces, addRecent, savePlace } = useSavedPlaces();
   
   const [startPoint, setStartPoint] = useState<[number, number] | null>(null);
@@ -36,6 +36,7 @@ function TrackingContent() {
   const [destinationName, setDestinationName] = useState<string | null>(null);
   const [alertRadius, setAlertRadius] = useState(500);
   const [isAlarmActive, setIsAlarmActive] = useState(false);
+  const [isStarting, setIsStarting] = useState(false);
   
   const distance = useMemo(() => {
     const target = destination;
@@ -58,10 +59,6 @@ function TrackingContent() {
         triggerAlarm(`Approaching stop: ${destinationName || "Destination"}`);
       }, 0);
       
-      // Haptic feedback if enabled
-      if (settings.vibrate && "vibrate" in navigator) {
-        navigator.vibrate([500, 300, 500, 300, 500]);
-      }
       return () => clearTimeout(timer);
     }
   }, [distance, alertRadius, isAlarmActive, triggerAlarm, isTracking, destinationName, settings.vibrate]);
@@ -75,7 +72,15 @@ function TrackingContent() {
   };
 
   const handleStart = async () => {
-    if (!destination) return;
+    if (!destination || isStarting) return;
+    setIsStarting(true);
+    prepareAudio();
+    await requestNotificationPermission().catch(console.error);
+    const hasLocation = await startTracking();
+    if (!hasLocation) {
+      setIsStarting(false);
+      return;
+    }
     setIsNavMode(true);
     setFollowUser(true);
     setSheetState("compact");
@@ -88,8 +93,7 @@ function TrackingContent() {
       type: "other"
     });
 
-    startTracking();
-    await requestNotificationPermission().catch(console.error);
+    setIsStarting(false);
   };
 
   const selectPlace = (place: SavedPlace) => {
@@ -123,6 +127,12 @@ function TrackingContent() {
       return () => clearTimeout(timer);
     }
   }, [destination, isNavMode, sheetState]);
+
+  useEffect(() => {
+    if (isNavMode && location && !startPoint) {
+      setStartPoint([location.latitude, location.longitude]);
+    }
+  }, [isNavMode, location, startPoint]);
 
   const mapCenter: [number, number] = useMemo(() => {
     if (followUser && location) return [location.latitude, location.longitude];
@@ -264,11 +274,28 @@ function TrackingContent() {
                 </section>
 
                 <button 
-                  onClick={handleStart} disabled={!destination}
+                  onClick={handleStart} disabled={!destination || isStarting}
                   className="w-full h-20 bg-primary disabled:opacity-10 rounded-[28px] flex items-center justify-center gap-5 text-2xl font-black text-white italic shadow-[0_20px_40px_rgba(37,99,235,0.3)] active:scale-95 transition-all uppercase tracking-tighter"
                 >
-                  <Play fill="white" size={28} /> Start Trip
+                  {isStarting ? <Loader2 className="animate-spin" size={28} /> : <Play fill="white" size={28} />} {isStarting ? "Getting Location..." : "Start Trip"}
                 </button>
+
+                {destination && (
+                  <div className="grid grid-cols-2 gap-3 -mt-6">
+                    <button
+                      onClick={() => savePlace({ name: destinationName || "Home", address: "Saved destination", coords: destination, type: "home" })}
+                      className="h-12 rounded-2xl border border-primary/20 bg-secondary/50 text-[10px] font-black uppercase tracking-widest text-foreground active:scale-95 transition-transform"
+                    >
+                      Save as Home
+                    </button>
+                    <button
+                      onClick={() => savePlace({ name: destinationName || "Office", address: "Saved destination", coords: destination, type: "office" })}
+                      className="h-12 rounded-2xl border border-primary/20 bg-secondary/50 text-[10px] font-black uppercase tracking-widest text-foreground active:scale-95 transition-transform"
+                    >
+                      Save as Office
+                    </button>
+                  </div>
+                )}
 
                 {/* Quick Shortcuts */}
                 <section>

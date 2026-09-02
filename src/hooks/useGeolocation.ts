@@ -1,6 +1,8 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
+import { Capacitor } from "@capacitor/core";
+import { Geolocation } from "@capacitor/geolocation";
 
 export interface Location {
   latitude: number;
@@ -14,6 +16,7 @@ export function useGeolocation() {
   const [permission, setPermission] = useState<PermissionState | null>(null);
   const [isTracking, setIsTracking] = useState(false);
   const watchId = useRef<number | null>(null);
+  const nativeWatchId = useRef<string | null>(null);
 
   const stopTracking = useCallback(() => {
     if (watchId.current !== null) {
@@ -21,37 +24,71 @@ export function useGeolocation() {
       watchId.current = null;
       setIsTracking(false);
     }
+    if (nativeWatchId.current !== null) {
+      void Geolocation.clearWatch({ id: nativeWatchId.current });
+      nativeWatchId.current = null;
+      setIsTracking(false);
+    }
   }, []);
 
-  const startTracking = useCallback(() => {
-    if (!navigator.geolocation) {
+  const startTracking = useCallback((): Promise<boolean> => {
+    if (!Capacitor.isNativePlatform() && !navigator.geolocation) {
       setError("Geolocation is not supported by your browser.");
-      return;
+      return Promise.resolve(false);
     }
 
     // Clear any existing watch
     stopTracking();
 
     setIsTracking(true);
-    watchId.current = navigator.geolocation.watchPosition(
-      (position) => {
-        setLocation({
-          latitude: position.coords.latitude,
-          longitude: position.coords.longitude,
-          accuracy: position.coords.accuracy,
-        });
-        setError(null);
-      },
-      (err) => {
-        setError(err.message);
-        setIsTracking(false);
-      },
-      {
-        enableHighAccuracy: true,
-        timeout: 15000,
-        maximumAge: 0,
+    return new Promise<boolean>(async (resolve) => {
+      let firstUpdate = true;
+      const onSuccess = (position: { coords: { latitude: number; longitude: number; accuracy: number } }) => {
+          setLocation({
+            latitude: position.coords.latitude,
+            longitude: position.coords.longitude,
+            accuracy: position.coords.accuracy,
+          });
+          setError(null);
+          if (firstUpdate) {
+            firstUpdate = false;
+            resolve(true);
+          }
+      };
+      const onError = (err: { message: string }) => {
+          setError(err.message);
+          setIsTracking(false);
+          if (firstUpdate) {
+            firstUpdate = false;
+            resolve(false);
+          }
+      };
+
+      if (Capacitor.isNativePlatform()) {
+        try {
+          const permissions = await Geolocation.requestPermissions();
+          if (permissions.location === "denied") {
+            onError({ message: "Location permission is required to track your trip." });
+            return;
+          }
+          nativeWatchId.current = await Geolocation.watchPosition(
+            { enableHighAccuracy: true, maximumAge: 0 },
+            (position, error) => {
+              if (error) onError({ message: error.message });
+              else if (position) onSuccess(position);
+            }
+          );
+        } catch (error) {
+          onError({ message: error instanceof Error ? error.message : "Unable to access location." });
+        }
+      } else {
+        watchId.current = navigator.geolocation.watchPosition(
+          onSuccess,
+          onError,
+          { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
+        );
       }
-    );
+    });
   }, [stopTracking]);
 
   useEffect(() => {

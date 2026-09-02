@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import { useSavedPlaces } from "@/hooks/useSavedPlaces";
 import { useRouter } from "next/navigation";
+import { cn } from "@/lib/utils";
 
 export default function Home() {
   const [search, setSearch] = useState("");

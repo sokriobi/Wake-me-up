@@ -58,6 +58,22 @@ To enable PWA features on your phone:
 - **iOS**: Open in Safari, tap "Share", and select "Add to Home Screen".
 - **Android**: Open in Chrome, tap the three dots, and select "Install App".
 
+## 🍎 iPhone Native App
+
+WakeMe includes a Capacitor iOS project for reliable native location and local notifications.
+
+1. On a Mac with Xcode installed, clone the project and run:
+   ```bash
+   npm install
+   npm run cap:sync
+   npx cap open ios
+   ```
+2. In Xcode, select the `App` target, choose your Apple Developer team, and set a unique bundle identifier if needed.
+3. Under **Signing & Capabilities**, add **Background Modes** and enable **Location updates**.
+4. Run the app on a real iPhone, allow **Always** location access and notifications, then start a trip before locking the phone.
+
+The native build uses iOS Core Location through Capacitor and iOS local notifications. A Mac with Xcode and an Apple Developer account are required to build and install the iPhone app; Windows can prepare and sync the project but cannot run the Xcode build.
+
 ## 🛡 Security & Permissions
 
 WakeMe requires the following permissions:
