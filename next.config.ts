@@ -8,7 +8,7 @@ const withPWA = withPWAInit({
 });
 
 const nextConfig: NextConfig = {
-  output: "export",
+  ...(process.env.BUILD_TARGET === "capacitor" ? { output: "export" } : {}),
 };
 
 export default withPWA(nextConfig);
