@@ -1,16 +1,35 @@
 "use client";
 
 import { useState } from "react";
-import { Search, MapPin, Star, Bell, Navigation, Zap, ShieldCheck, Clock } from "lucide-react";
+import { 
+  Search, 
+  MapPin, 
+  Star, 
+  Bell, 
+  Navigation, 
+  Zap, 
+  ShieldCheck, 
+  Clock, 
+  Home as HomeIcon, 
+  Briefcase, 
+  Trash2,
+  Sparkles,
+  ArrowRight,
+  Sun,
+  Moon,
+  Train,
+  Bus
+} from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import { useSavedPlaces } from "@/hooks/useSavedPlaces";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
+import { searchLocalPlaces } from "@/lib/bangladeshPlaces";
 
 export default function Home() {
   const [search, setSearch] = useState("");
-  const { savedPlaces, recentPlaces } = useSavedPlaces();
+  const { savedPlaces, recentPlaces, homePlace, officePlace, removeSaved, removeRecent } = useSavedPlaces();
   const router = useRouter();
 
   const [activeTab, setActiveTab] = useState<"saved" | "recent" | null>(null);
@@ -19,102 +38,201 @@ export default function Home() {
     router.push(`/tracking?lat=${lat}&lon=${lon}&name=${encodeURIComponent(name)}`);
   };
 
+  const handleCommuteTrip = (fromType: "home" | "office", toType: "home" | "office") => {
+    const target = toType === "office" ? officePlace : homePlace;
+    if (target && target.coords) {
+      handleSelectPlace(target.coords[0], target.coords[1], target.name);
+    } else {
+      router.push("/tracking");
+    }
+  };
+
+  const searchResults = search.trim() ? searchLocalPlaces(search) : [];
+
   const currentList = (activeTab === "saved" ? savedPlaces : recentPlaces).filter((place) =>
     place.name.toLowerCase().includes(search.toLowerCase()) ||
     place.address.toLowerCase().includes(search.toLowerCase())
   );
 
   return (
-    <div className="min-h-[100dvh] bg-background text-foreground transition-colors duration-500">
-      <div className="max-w-md mx-auto px-6 pt-16 pb-32">
-        <header className="flex justify-between items-start mb-12">
+    <div className="min-h-[100dvh] bg-background text-foreground transition-colors duration-500 pt-[max(1rem,env(safe-area-inset-top,44px))]">
+      <div className="max-w-[420px] mx-auto px-5 pb-32 space-y-6">
+        
+        {/* iOS Native Header */}
+        <header className="flex justify-between items-center pt-2">
           <motion.div
-            initial={{ opacity: 0, x: -20 }}
+            initial={{ opacity: 0, x: -15 }}
             animate={{ opacity: 1, x: 0 }}
           >
-            <h1 className="text-4xl font-black tracking-tighter bg-gradient-to-br from-primary to-primary/40 bg-clip-text text-transparent italic uppercase">
+            <div className="flex items-center gap-1.5 mb-0.5">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+              <span className="text-[10px] font-black uppercase tracking-[0.25em] text-primary">GPS Transit Guard</span>
+            </div>
+            <h1 className="text-3xl sm:text-4xl font-black tracking-tight bg-gradient-to-br from-primary via-blue-500 to-indigo-600 bg-clip-text text-transparent italic uppercase leading-none">
               WakeMe
             </h1>
-            <p className="text-muted-foreground font-bold text-xs uppercase tracking-[0.2em] mt-1">Transit Intelligence</p>
           </motion.div>
           <Link
             href="/settings"
             aria-label="Open settings"
-            className="w-12 h-12 rounded-2xl bg-secondary border border-primary/20 flex items-center justify-center relative shadow-sm active-tap"
+            className="w-11 h-11 rounded-2xl bg-secondary/80 border border-primary/20 flex items-center justify-center relative shadow-sm active-tap"
           >
-            <Bell size={20} className="text-foreground" />
-            <span className="absolute top-3 right-3 w-2 h-2 bg-rose-500 rounded-full border-2 border-background"></span>
+            <Bell size={18} className="text-foreground" />
+            <span className="absolute top-2.5 right-2.5 w-2 h-2 bg-rose-500 rounded-full border-2 border-background"></span>
           </Link>
         </header>
 
-        {/* Search Bar */}
+        {/* Daily Smart Commute Card (Morning / Evening Routine) */}
+        <div className="bg-gradient-to-br from-card to-secondary/60 p-4 rounded-[28px] border border-primary/20 shadow-lg space-y-3">
+          <div className="flex justify-between items-center">
+            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground flex items-center gap-1.5">
+              <Sun size={13} className="text-amber-400" /> Daily Commute Routine
+            </span>
+            <span className="text-[8px] font-black uppercase tracking-wider bg-primary/10 text-primary px-2 py-0.5 rounded-full">
+              1-Tap Wake
+            </span>
+          </div>
+
+          <div className="grid grid-cols-2 gap-2.5">
+            {/* Morning: Go to Office */}
+            <button
+              onClick={() => handleCommuteTrip("home", "office")}
+              className="p-3 bg-secondary/70 hover:bg-secondary rounded-2xl border border-primary/10 flex flex-col items-start gap-1 text-left transition-all active-tap group"
+            >
+              <div className="flex items-center justify-between w-full">
+                <div className="w-7 h-7 rounded-lg bg-purple-500/10 text-purple-500 flex items-center justify-center">
+                  <Briefcase size={14} />
+                </div>
+                <ArrowRight size={13} className="text-muted-foreground group-hover:text-primary transition-colors" />
+              </div>
+              <div>
+                <p className="text-xs font-black text-foreground uppercase">To Office</p>
+                <p className="text-[8px] text-muted-foreground font-bold truncate">
+                  {officePlace ? officePlace.name : "Set in Settings"}
+                </p>
+              </div>
+            </button>
+
+            {/* Evening: Go Home */}
+            <button
+              onClick={() => handleCommuteTrip("office", "home")}
+              className="p-3 bg-secondary/70 hover:bg-secondary rounded-2xl border border-primary/10 flex flex-col items-start gap-1 text-left transition-all active-tap group"
+            >
+              <div className="flex items-center justify-between w-full">
+                <div className="w-7 h-7 rounded-lg bg-blue-500/10 text-blue-500 flex items-center justify-center">
+                  <HomeIcon size={14} />
+                </div>
+                <ArrowRight size={13} className="text-muted-foreground group-hover:text-primary transition-colors" />
+              </div>
+              <div>
+                <p className="text-xs font-black text-foreground uppercase">To Home</p>
+                <p className="text-[8px] text-muted-foreground font-bold truncate">
+                  {homePlace ? homePlace.name : "Set in Settings"}
+                </p>
+              </div>
+            </button>
+          </div>
+        </div>
+
+        {/* Search Bar with Instant Local Matching */}
         <motion.div 
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-          className="relative mb-10 group"
+          transition={{ delay: 0.05 }}
+          className="relative group"
         >
-          <div className="absolute inset-y-0 left-5 flex items-center pointer-events-none">
-            <Search className="text-muted-foreground group-focus-within:text-primary transition-colors" size={22} />
+          <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none">
+            <Search className="text-muted-foreground group-focus-within:text-primary transition-colors" size={20} />
           </div>
           <input
             type="text"
-            placeholder="Search saved destinations..."
-            aria-label="Search saved destinations"
-            className="w-full h-16 pl-14 pr-4 bg-secondary/80 backdrop-blur-md border-2 border-transparent focus:border-primary/20 rounded-[28px] focus:outline-none transition-all text-lg font-bold text-foreground placeholder:text-muted-foreground/40 shadow-sm"
+            placeholder="Search stops (e.g. Azampur, Abdullahpur)..."
+            aria-label="Search destinations"
+            className="w-full h-14 pl-12 pr-4 bg-secondary/80 backdrop-blur-md border-2 border-transparent focus:border-primary/30 rounded-2xl focus:outline-none transition-all text-base font-bold text-foreground placeholder:text-muted-foreground/40 shadow-sm"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
+
+          {/* Instant Search Dropdown */}
+          {search.trim().length > 0 && (
+            <div className="absolute top-[105%] left-0 right-0 bg-background/98 backdrop-blur-3xl border border-primary/25 rounded-2xl shadow-2xl z-50 overflow-hidden max-h-60 ios-scroll">
+              {searchResults.length === 0 ? (
+                <div className="p-4 text-center text-xs text-muted-foreground font-bold">
+                  No transit matches for &quot;{search}&quot;
+                </div>
+              ) : (
+                searchResults.map(p => (
+                  <button
+                    key={p.id}
+                    onClick={() => handleSelectPlace(p.lat, p.lon, p.name)}
+                    className="w-full px-4 py-3 flex items-center gap-3 text-left hover:bg-primary/10 transition-colors border-b border-border/20 last:border-0 active-tap"
+                  >
+                    <MapPin size={16} className="text-primary shrink-0" />
+                    <div className="min-w-0 flex-1">
+                      <p className="text-xs font-black truncate">{p.name}</p>
+                      <p className="text-[10px] text-muted-foreground truncate">{p.area}, {p.city}</p>
+                    </div>
+                  </button>
+                ))
+              )}
+            </div>
+          )}
         </motion.div>
 
-        {/* Hero Actions */}
-        <section className="grid grid-cols-2 gap-5 mb-12">
+        {/* Hero Actions Grid */}
+        <section className="grid grid-cols-2 gap-3.5">
           <Link href="/tracking" className="relative overflow-hidden group" aria-label="Start live tracking">
             <motion.div 
               whileHover={{ scale: 0.98 }}
               whileTap={{ scale: 0.95 }}
-              className="flex flex-col items-start justify-between p-7 bg-primary rounded-[40px] aspect-square shadow-[0_20px_40px_rgba(37,99,235,0.2)]"
+              className="flex flex-col items-start justify-between p-5 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-[30px] aspect-square shadow-[0_15px_35px_rgba(37,99,235,0.3)]"
             >
-              <div className="w-14 h-14 bg-white/20 rounded-[22px] flex items-center justify-center">
-                <Navigation size={28} className="text-white" fill="currentColor" />
+              <div className="w-11 h-11 bg-white/20 rounded-2xl flex items-center justify-center">
+                <Navigation size={22} className="text-white" fill="currentColor" />
               </div>
               <div>
-                <span className="block text-2xl font-black text-white leading-tight italic">LIVE<br/>TRACKING</span>
-                <span className="text-[10px] font-black text-white/60 mt-2 block uppercase tracking-[0.2em]">Start Journey</span>
+                <span className="block text-xl font-black text-white leading-tight italic uppercase">LIVE<br/>TRACKING</span>
+                <span className="text-[9px] font-black text-white/70 mt-1 block uppercase tracking-wider">Start Journey</span>
               </div>
-              <Zap className="absolute -right-6 -top-6 w-32 h-32 text-white/10 -rotate-12 group-hover:rotate-0 transition-transform duration-700" />
+              <Zap className="absolute -right-5 -top-5 w-24 h-24 text-white/10 -rotate-12 group-hover:rotate-0 transition-transform duration-500" />
             </motion.div>
           </Link>
           
-          <div className="grid grid-rows-2 gap-5">
+          <div className="grid grid-rows-2 gap-3">
             <button 
               onClick={() => setActiveTab(activeTab === "saved" ? null : "saved")}
               className={cn(
-                "flex items-center gap-4 p-5 rounded-[28px] transition-all group shadow-sm active-tap border-2",
+                "flex items-center gap-3 p-3.5 rounded-2xl transition-all group shadow-sm active-tap border-2 text-left",
                 activeTab === "saved" ? "bg-primary border-primary" : "bg-secondary/80 border-transparent"
               )}
             >
-              <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center transition-transform", activeTab === "saved" ? "bg-white/20" : "bg-yellow-500/10")}>
-                <Star size={20} className={activeTab === "saved" ? "text-white" : "text-yellow-600"} fill="currentColor" />
+              <div className={cn("w-8 h-8 rounded-xl flex items-center justify-center transition-transform shrink-0", activeTab === "saved" ? "bg-white/20" : "bg-yellow-500/10")}>
+                <Star size={16} className={activeTab === "saved" ? "text-white" : "text-yellow-600"} fill="currentColor" />
               </div>
-              <span className={cn("font-black text-[10px] uppercase tracking-widest", activeTab === "saved" ? "text-white" : "text-foreground")}>Saved</span>
+              <div>
+                <span className={cn("font-black text-[10px] uppercase tracking-wider block", activeTab === "saved" ? "text-white" : "text-foreground")}>Fixed</span>
+                <span className={cn("text-[8px] font-bold block", activeTab === "saved" ? "text-white/70" : "text-muted-foreground")}>{savedPlaces.length} places</span>
+              </div>
             </button>
             <button 
               onClick={() => setActiveTab(activeTab === "recent" ? null : "recent")}
               className={cn(
-                "flex items-center gap-4 p-5 rounded-[28px] transition-all group shadow-sm active-tap border-2",
+                "flex items-center gap-3 p-3.5 rounded-2xl transition-all group shadow-sm active-tap border-2 text-left",
                 activeTab === "recent" ? "bg-primary border-primary" : "bg-secondary/80 border-transparent"
               )}
             >
-              <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center transition-transform", activeTab === "recent" ? "bg-white/20" : "bg-blue-500/10")}>
-                <Clock size={20} className={activeTab === "recent" ? "text-white" : "text-blue-600"} />
+              <div className={cn("w-8 h-8 rounded-xl flex items-center justify-center transition-transform shrink-0", activeTab === "recent" ? "bg-white/20" : "bg-blue-500/10")}>
+                <Clock size={16} className={activeTab === "recent" ? "text-white" : "text-blue-600"} />
               </div>
-              <span className={cn("font-black text-[10px] uppercase tracking-widest", activeTab === "recent" ? "text-white" : "text-foreground")}>Recent</span>
+              <div>
+                <span className={cn("font-black text-[10px] uppercase tracking-wider block", activeTab === "recent" ? "text-white" : "text-foreground")}>Recent</span>
+                <span className={cn("text-[8px] font-bold block", activeTab === "recent" ? "text-white/70" : "text-muted-foreground")}>{recentPlaces.length} trips</span>
+              </div>
             </button>
           </div>
         </section>
 
-        {/* Dynamic List Section */}
+        {/* Dynamic Tab List Section */}
         <AnimatePresence mode="wait">
           {activeTab && (
             <motion.section
@@ -122,40 +240,59 @@ export default function Home() {
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: "auto" }}
               exit={{ opacity: 0, height: 0 }}
-              className="mb-12 overflow-hidden"
+              className="overflow-hidden"
             >
-              <div className="flex justify-between items-center mb-8">
-                <h2 className="text-[10px] font-black uppercase tracking-[0.3em] text-primary italic">
-                  {activeTab === "saved" ? "Your Favorites" : "Recent Trips"}
+              <div className="flex justify-between items-center mb-3">
+                <h2 className="text-[10px] font-black uppercase tracking-[0.25em] text-primary italic">
+                  {activeTab === "saved" ? "Fixed Locations" : "Recent Trips"}
                 </h2>
-                <div className="h-[2px] flex-1 bg-primary/10 mx-4"></div>
+                <div className="h-[1px] flex-1 bg-primary/10 mx-3"></div>
               </div>
               
-              <div className="space-y-4">
+              <div className="space-y-2.5">
                 {currentList.length === 0 ? (
-                  <div className="text-center py-12 bg-secondary/30 rounded-[40px] border-2 border-dashed border-primary/10">
-                    <p className="text-[10px] text-muted-foreground font-black uppercase tracking-widest leading-loose">
-                        No matching {activeTab} places found.<br/>
-                      <span className="text-primary italic">Start a journey to add some!</span>
+                  <div className="text-center py-8 bg-secondary/30 rounded-2xl border border-dashed border-primary/15">
+                    <p className="text-[10px] text-muted-foreground font-black uppercase tracking-wider">
+                      No {activeTab} locations found
                     </p>
                   </div>
                 ) : (
                   currentList.map((place, i) => (
                     <motion.div
-                      initial={{ opacity: 0, x: -10 }}
+                      initial={{ opacity: 0, x: -8 }}
                       animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: i * 0.05 }}
+                      transition={{ delay: i * 0.03 }}
                       key={place.id}
-                      onClick={() => handleSelectPlace(place.coords[0], place.coords[1], place.name)}
-                      className="flex items-center p-6 bg-card border border-primary/20 rounded-[32px] hover:border-primary transition-all cursor-pointer group shadow-sm active-tap"
+                      className="flex items-center justify-between p-3.5 bg-card border border-primary/15 rounded-2xl hover:border-primary transition-all group shadow-sm"
                     >
-                      <div className="w-12 h-12 rounded-2xl bg-secondary flex items-center justify-center mr-5 group-hover:bg-primary group-hover:text-white transition-all">
-                        {activeTab === "saved" ? <Star size={20} className="text-yellow-500" fill="currentColor" /> : <Clock size={20} className="text-blue-500" />}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <h3 className="font-black text-foreground truncate text-lg tracking-tight uppercase">{place.name}</h3>
-                        <p className="text-[10px] text-muted-foreground font-bold truncate mt-1 tracking-widest">{place.address}</p>
-                      </div>
+                      <button
+                        onClick={() => handleSelectPlace(place.coords[0], place.coords[1], place.name)}
+                        className="flex items-center flex-1 min-w-0 text-left active-tap"
+                      >
+                        <div className="w-9 h-9 rounded-xl bg-secondary flex items-center justify-center mr-3 shrink-0">
+                          {place.type === "home" ? (
+                            <HomeIcon size={16} className="text-blue-500" />
+                          ) : place.type === "office" ? (
+                            <Briefcase size={16} className="text-purple-500" />
+                          ) : activeTab === "saved" ? (
+                            <Star size={16} className="text-yellow-500" fill="currentColor" />
+                          ) : (
+                            <Clock size={16} className="text-blue-500" />
+                          )}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <h3 className="font-black text-foreground truncate text-xs uppercase">{place.name}</h3>
+                          <p className="text-[9px] text-muted-foreground font-bold truncate mt-0.5">{place.address}</p>
+                        </div>
+                      </button>
+
+                      <button
+                        onClick={() => activeTab === "saved" ? removeSaved(place.id) : removeRecent(place.id)}
+                        className="p-2 text-muted-foreground/40 hover:text-rose-500 transition-colors ml-1 active-tap"
+                        title="Remove"
+                      >
+                        <Trash2 size={15} />
+                      </button>
                     </motion.div>
                   ))
                 )}
@@ -164,78 +301,30 @@ export default function Home() {
           )}
         </AnimatePresence>
 
-        {/* Recent Destinations */}
-        <section className="mb-12">
-          <div className="flex justify-between items-center mb-8">
-            <h2 className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground">
-              Recent Destinations
-            </h2>
-            <div className="h-[1px] flex-1 bg-border mx-4"></div>
-            <button className="text-[10px] font-black text-primary uppercase tracking-widest bg-primary/10 px-3 py-1 rounded-full">
-              Edit
-            </button>
-          </div>
-          
-          <div className="space-y-4">
-            <AnimatePresence mode="popLayout">
-              {recentPlaces.length === 0 ? (
-                <motion.div 
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  className="text-center py-16 bg-secondary/30 rounded-[40px] border border-dashed border-primary/20/10"
-                >
-                  <p className="text-xs text-muted-foreground font-black uppercase tracking-widest">No trip history found</p>
-                </motion.div>
-              ) : (
-                recentPlaces.map((dest, i) => (
-                  <motion.div
-                    layout
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: i * 0.05 }}
-                    key={dest.id}
-                    onClick={() => handleSelectPlace(dest.coords[0], dest.coords[1], dest.name)}
-                    className="flex items-center p-6 bg-secondary/50 border border-primary/20/50 rounded-[32px] hover:bg-secondary hover:border-primary/20 transition-all cursor-pointer group shadow-sm active-tap"
-                  >
-                    <div className="w-12 h-12 rounded-2xl bg-background flex items-center justify-center mr-5 group-hover:bg-primary group-hover:text-white transition-all shadow-inner">
-                      <MapPin size={22} className="text-muted-foreground group-hover:text-white transition-colors" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <h3 className="font-black text-foreground truncate text-lg tracking-tight">{dest.name}</h3>
-                      <p className="text-xs text-muted-foreground font-bold truncate mt-0.5">{dest.address}</p>
-                    </div>
-                    <Star size={18} className="text-muted-foreground/30 hover:text-yellow-500 transition-colors ml-4" />
-                  </motion.div>
-                ))
-              )}
-            </AnimatePresence>
-          </div>
-        </section>
-
-        {/* Premium Banner */}
-        <motion.div 
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.5 }}
-          className="p-8 bg-foreground text-background rounded-[40px] flex flex-col gap-6 relative overflow-hidden shadow-2xl"
-        >
-          <div className="flex gap-5 items-center relative z-10">
-            <div className="w-14 h-14 rounded-2xl bg-background/20 backdrop-blur-md flex-shrink-0 flex items-center justify-center shadow-lg">
-              <ShieldCheck className="text-background" size={28} />
+        {/* Feature Highlights */}
+        <div className="grid grid-cols-2 gap-2.5">
+          <div className="p-3.5 bg-card border border-primary/15 rounded-2xl flex items-center gap-3">
+            <div className="w-8 h-8 rounded-xl bg-blue-500/10 text-blue-500 flex items-center justify-center shrink-0">
+              <Bus size={16} />
             </div>
             <div>
-              <h4 className="font-black text-lg italic uppercase leading-none">Smart Alarm</h4>
-              <p className="text-[10px] font-black uppercase tracking-widest opacity-60 mt-1">Background Intelligence active</p>
+              <p className="text-[11px] font-black text-foreground uppercase">Bus & Metro</p>
+              <p className="text-[8px] text-muted-foreground font-bold">Bangladesh Lines</p>
             </div>
           </div>
-          <p className="text-xs font-bold leading-relaxed opacity-80 relative z-10">
-            We track your location in real-time and alert you exactly when you need to wake up.
-          </p>
-          <div className="absolute -bottom-10 -right-10 w-40 h-40 bg-background/5 rounded-full blur-3xl"></div>
-        </motion.div>
+
+          <div className="p-3.5 bg-card border border-primary/15 rounded-2xl flex items-center gap-3">
+            <div className="w-8 h-8 rounded-xl bg-emerald-500/10 text-emerald-500 flex items-center justify-center shrink-0">
+              <ShieldCheck size={16} />
+            </div>
+            <div>
+              <p className="text-[11px] font-black text-foreground uppercase">100% Offline</p>
+              <p className="text-[8px] text-muted-foreground font-bold">Web Audio Synth</p>
+            </div>
+          </div>
+        </div>
+
       </div>
     </div>
   );
 }
-
-

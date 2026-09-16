@@ -1,138 +1,210 @@
 "use client";
 
-import { motion, AnimatePresence } from "framer-motion";
-import { Bell, Shield, Moon, Volume2, Info, ChevronRight, ArrowLeft, Sun, Smartphone, Music, Check, Share2, Star } from "lucide-react";
+import { useState } from "react";
+import { Volume2, Info, ArrowLeft, Smartphone, Music, Check, Share2, Star, Play, CheckCheck } from "lucide-react";
 import Link from "next/link";
 import { useSettings } from "@/hooks/useSettings";
+import { useAlarm } from "@/hooks/useAlarm";
 import { cn } from "@/lib/utils";
 
 const ALARM_SOUNDS = [
-  { id: "transit_alert", name: "Transit Alert", desc: "Balanced & clear" },
-  { id: "extreme_buzz", name: "Extreme Buzz", desc: "For heavy sleepers" },
-  { id: "soft_chime", name: "Soft Chime", desc: "Gentle wake up" },
-  { id: "radar", name: "Radar Pulse", desc: "High frequency" },
+  { id: "transit_alert", name: "Transit Alert", desc: "Balanced, dual-tone chime" },
+  { id: "extreme_buzz", name: "Extreme Buzz", desc: "Loud pulse for heavy sleepers" },
+  { id: "soft_chime", name: "Soft Chime", desc: "Gentle ascending melody" },
+  { id: "radar", name: "Radar Pulse", desc: "High frequency ping" },
 ];
 
 export default function SettingsPage() {
   const { settings, updateSettings } = useSettings();
+  const { previewSound } = useAlarm(settings);
+  const [copied, setCopied] = useState(false);
+
+  const handleSoundSelect = (soundId: string) => {
+    updateSettings({ alarmSound: soundId });
+    previewSound(soundId, settings.volume);
+  };
+
+  const handleShare = async () => {
+    if (typeof window !== "undefined") {
+      if (navigator.share) {
+        try {
+          await navigator.share({
+            title: "WakeMe - Smart Transit Alarm",
+            text: "Never miss your bus or metro stop in Bangladesh again with WakeMe!",
+            url: window.location.origin
+          });
+          return;
+        } catch {}
+      }
+      try {
+        await navigator.clipboard.writeText(window.location.origin);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2500);
+      } catch {}
+    }
+  };
 
   return (
-    <div className="min-h-screen bg-background p-6 pt-16 pb-40">
-      <div className="max-w-lg mx-auto space-y-12">
-        <header className="flex items-center justify-between mb-12">
-          <div className="flex items-center gap-6">
-            <Link href="/tracking" className="w-12 h-12 bg-card rounded-2xl flex items-center justify-center border border-primary/20 shadow-sm active:scale-90 transition-transform">
-              <ArrowLeft size={24} />
+    <div className="min-h-[100dvh] bg-background p-5 pt-[max(1rem,env(safe-area-inset-top,44px))] pb-32">
+      <div className="max-w-[420px] mx-auto space-y-8">
+        {/* iOS Header */}
+        <header className="flex items-center justify-between pt-2">
+          <div className="flex items-center gap-4">
+            <Link href="/tracking" className="w-11 h-11 bg-card rounded-2xl flex items-center justify-center border border-primary/20 shadow-sm active-tap">
+              <ArrowLeft size={20} />
             </Link>
-            <h1 className="text-4xl font-black italic tracking-tighter uppercase leading-none">Settings</h1>
+            <div>
+              <h1 className="text-2xl sm:text-3xl font-black italic tracking-tight uppercase leading-none">Settings</h1>
+              <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest mt-0.5">Preferences & Audio</p>
+            </div>
           </div>
-          <button className="w-12 h-12 bg-primary/10 rounded-2xl flex items-center justify-center text-primary active:scale-90 transition-transform">
-            <Share2 size={22} />
+          <button 
+            onClick={handleShare}
+            className="w-11 h-11 bg-primary/10 rounded-2xl flex items-center justify-center text-primary active-tap relative"
+            title="Share WakeMe"
+          >
+            {copied ? <CheckCheck size={18} className="text-emerald-500" /> : <Share2 size={18} />}
+            {copied && (
+              <span className="absolute -bottom-6 right-0 text-[8px] font-black uppercase tracking-wider bg-emerald-500 text-white px-2 py-0.5 rounded-full whitespace-nowrap shadow-lg">
+                Link Copied!
+              </span>
+            )}
           </button>
         </header>
 
-        {/* Alarm Customization */}
-        <section className="space-y-6">
-          <div className="flex items-center gap-3 px-2">
-            <Music size={18} className="text-primary" />
-            <h2 className="text-[10px] font-black uppercase tracking-[0.4em] text-muted-foreground italic">Alarm Configuration</h2>
+        {/* Alarm Melody Selection */}
+        <section className="space-y-3">
+          <div className="flex items-center justify-between px-1">
+            <div className="flex items-center gap-2">
+              <Music size={15} className="text-primary" />
+              <h2 className="text-[10px] font-black uppercase tracking-[0.25em] text-muted-foreground italic">Alarm Melody</h2>
+            </div>
+            <span className="text-[8px] font-bold text-muted-foreground/60 uppercase">Tap to Preview</span>
           </div>
           
-          <div className="grid gap-3">
-            {ALARM_SOUNDS.map((sound) => (
-              <button
-                key={sound.id}
-                onClick={() => updateSettings({ alarmSound: sound.id })}
-                className={cn(
-                  "p-5 rounded-[28px] border-2 transition-all text-left flex items-center justify-between group",
-                  settings.alarmSound === sound.id 
-                    ? "bg-primary/5 border-primary shadow-lg shadow-primary/5" 
-                    : "bg-card border-primary/20 hover:border-primary/40"
-                )}
-              >
-                <div>
-                  <p className={cn("text-sm font-black uppercase tracking-widest", settings.alarmSound === sound.id ? "text-primary" : "text-foreground")}>
-                    {sound.name}
-                  </p>
-                  <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mt-1 opacity-60">
-                    {sound.desc}
-                  </p>
-                </div>
-                {settings.alarmSound === sound.id && (
-                  <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center text-white shadow-lg">
-                    <Check size={16} strokeWidth={4} />
+          <div className="grid gap-2">
+            {ALARM_SOUNDS.map((sound) => {
+              const isSelected = settings.alarmSound === sound.id;
+              return (
+                <button
+                  key={sound.id}
+                  onClick={() => handleSoundSelect(sound.id)}
+                  className={cn(
+                    "p-3.5 rounded-2xl border-2 transition-all text-left flex items-center justify-between group active-tap",
+                    isSelected 
+                      ? "bg-primary/10 border-primary shadow-sm" 
+                      : "bg-card border-primary/10 hover:border-primary/30"
+                  )}
+                >
+                  <div className="flex items-center gap-3">
+                    <div className={cn(
+                      "w-9 h-9 rounded-xl flex items-center justify-center transition-colors",
+                      isSelected ? "bg-primary text-white" : "bg-secondary text-muted-foreground group-hover:text-foreground"
+                    )}>
+                      <Play size={14} fill="currentColor" />
+                    </div>
+                    <div>
+                      <p className={cn("text-xs font-black uppercase tracking-wider", isSelected ? "text-primary" : "text-foreground")}>
+                        {sound.name}
+                      </p>
+                      <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider mt-0.5 opacity-70">
+                        {sound.desc}
+                      </p>
+                    </div>
                   </div>
-                )}
-              </button>
-            ))}
+                  {isSelected && (
+                    <div className="w-6 h-6 bg-primary rounded-full flex items-center justify-center text-white shadow-sm">
+                      <Check size={12} strokeWidth={3} />
+                    </div>
+                  )}
+                </button>
+              );
+            })}
           </div>
         </section>
 
-        {/* Haptic & Volume */}
-        <section className="space-y-6">
-          <div className="flex items-center gap-3 px-2">
-            <Smartphone size={18} className="text-emerald-500" />
-            <h2 className="text-[10px] font-black uppercase tracking-[0.4em] text-muted-foreground italic">System Preferences</h2>
+        {/* Vibration & Volume Controls */}
+        <section className="space-y-3">
+          <div className="flex items-center gap-2 px-1">
+            <Smartphone size={15} className="text-emerald-500" />
+            <h2 className="text-[10px] font-black uppercase tracking-[0.25em] text-muted-foreground italic">Alert Controls</h2>
           </div>
           
-          <div className="bg-card border border-primary/20 rounded-[32px] overflow-hidden shadow-sm">
-            <div className="p-6 flex items-center justify-between border-b border-primary/20">
-              <div className="flex items-center gap-4">
-                <div className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-500">
-                  <Smartphone size={20} />
+          <div className="bg-card border border-primary/15 rounded-2xl overflow-hidden shadow-sm divide-y divide-border/20">
+            {/* Vibration Toggle */}
+            <div className="p-4 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-500">
+                  <Smartphone size={16} />
                 </div>
-                <p className="text-xs font-black uppercase tracking-widest">Vibration Alert</p>
+                <div>
+                  <p className="text-xs font-black uppercase tracking-wider text-foreground">Haptic Vibration</p>
+                  <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest mt-0.5">Vibrate on arrival</p>
+                </div>
               </div>
               <button 
                 onClick={() => updateSettings({ vibrate: !settings.vibrate })}
+                aria-label="Toggle vibration"
                 className={cn(
-                  "w-14 h-8 rounded-full transition-all relative p-1",
-                  settings.vibrate ? "bg-primary" : "bg-muted"
+                  "w-12 h-7 rounded-full transition-all relative p-1 active-tap",
+                  settings.vibrate ? "bg-primary" : "bg-secondary"
                 )}
               >
                 <div className={cn(
-                  "w-6 h-6 bg-white rounded-full shadow-sm transition-all",
-                  settings.vibrate ? "translate-x-6" : "translate-x-0"
+                  "w-5 h-5 bg-white rounded-full shadow-md transition-all",
+                  settings.vibrate ? "translate-x-5" : "translate-x-0"
                 )} />
               </button>
             </div>
             
-            <div className="p-6 space-y-4">
+            {/* Volume Slider */}
+            <div className="p-4 space-y-2.5">
               <div className="flex justify-between items-center">
-                <div className="flex items-center gap-4">
-                  <div className="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-500">
-                    <Volume2 size={20} />
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-500">
+                    <Volume2 size={16} />
                   </div>
-                  <p className="text-xs font-black uppercase tracking-widest">Alert Volume</p>
+                  <p className="text-xs font-black uppercase tracking-wider text-foreground">Alarm Volume</p>
                 </div>
-                <span className="text-[10px] font-black text-primary">{settings.volume}%</span>
+                <span className="text-xs font-black text-primary italic">{settings.volume}%</span>
               </div>
               <input 
                 type="range" 
+                min="10"
+                max="100"
                 value={settings.volume}
-                onChange={(e) => updateSettings({ volume: parseInt(e.target.value) })}
+                onChange={(e) => {
+                  const val = parseInt(e.target.value);
+                  updateSettings({ volume: val });
+                }}
+                onMouseUp={() => previewSound(settings.alarmSound, settings.volume)}
+                onTouchEnd={() => previewSound(settings.alarmSound, settings.volume)}
+                aria-label="Adjust alarm volume"
                 className="w-full h-2 bg-secondary rounded-full appearance-none accent-primary cursor-pointer"
               />
             </div>
           </div>
         </section>
 
-        <section className="space-y-6">
-          <div className="flex items-center gap-3 px-2">
-            <Info size={18} className="text-amber-500" />
-            <h2 className="text-[10px] font-black uppercase tracking-[0.4em] text-muted-foreground italic">App Information</h2>
+        {/* App Info Card */}
+        <section className="space-y-3">
+          <div className="flex items-center gap-2 px-1">
+            <Info size={15} className="text-amber-500" />
+            <h2 className="text-[10px] font-black uppercase tracking-[0.25em] text-muted-foreground italic">About WakeMe</h2>
           </div>
-          <div className="p-8 bg-foreground text-background rounded-[40px] shadow-2xl relative overflow-hidden group">
-            <div className="relative z-10">
-              <p className="text-2xl font-black italic tracking-tighter leading-none uppercase mb-2">WakeMe Premium</p>
-              <p className="text-[10px] font-bold opacity-60 uppercase tracking-widest leading-relaxed">
-                Enjoy ad-free tracking and custom sounds.
+          <div className="p-6 bg-foreground text-background rounded-3xl shadow-xl relative overflow-hidden group">
+            <div className="relative z-10 space-y-1.5">
+              <p className="text-xl font-black italic tracking-tight leading-none uppercase">WakeMe iOS Edition</p>
+              <p className="text-[10px] font-bold opacity-70 uppercase tracking-widest leading-relaxed">
+                Optimized for iPhone 13 Pro • Web Audio API • Bangladesh Transit Index.
               </p>
-              <button className="mt-6 px-6 py-3 bg-primary text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:scale-105 active:scale-95 transition-all shadow-xl">
-                Upgrade Now
-              </button>
+              <div className="pt-2">
+                <span className="px-2.5 py-1 rounded-full text-[8px] font-black uppercase tracking-wider bg-background/20 text-background">
+                  v1.2.5 • iOS Ready
+                </span>
+              </div>
             </div>
-            <Star className="absolute -right-8 -bottom-8 w-40 h-40 text-background/5 -rotate-12 group-hover:scale-110 transition-transform duration-700" />
+            <Star className="absolute -right-8 -bottom-8 w-32 h-32 text-background/5 -rotate-12 group-hover:scale-105 transition-transform duration-500" />
           </div>
         </section>
       </div>

@@ -5,33 +5,34 @@ import L from "leaflet";
 import { MapContainer, TileLayer, Marker, Circle, useMap, useMapEvents, Polyline } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 
-// Fix for default marker icon in Leaflet + Next.js
-const DefaultIcon = L.icon({
-  iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
-  iconRetinaUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
-  shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
-  iconSize: [25, 41],
-  iconAnchor: [12, 41],
+// Self-contained SVG Icons for 100% offline reliability
+const StartIcon = L.divIcon({
+  className: "custom-start-icon",
+  html: `<div style="position: relative; display: flex; align-items: center; justify-content: center;">
+          <div style="width: 22px; height: 22px; background: #3b82f6; border-radius: 50%; border: 3px solid white; box-shadow: 0 4px 12px rgba(59,130,246,0.6);"></div>
+        </div>`,
+  iconSize: [22, 22],
+  iconAnchor: [11, 11],
 });
 
 const DestinationIcon = L.divIcon({
-  className: "custom-div-icon",
-  html: `<div style="background-color: #ef4444; width: 15px; height: 15px; border-radius: 50%; border: 3px solid white; box-shadow: 0 0 10px rgba(0,0,0,0.5);"></div>`,
-  iconSize: [15, 15],
-  iconAnchor: [7.5, 7.5],
+  className: "custom-dest-icon",
+  html: `<div style="position: relative; display: flex; align-items: center; justify-content: center;">
+          <div style="width: 22px; height: 22px; background: #f43f5e; border-radius: 50%; border: 3px solid white; box-shadow: 0 4px 12px rgba(244,63,94,0.6);"></div>
+        </div>`,
+  iconSize: [22, 22],
+  iconAnchor: [11, 11],
 });
 
 const UserIcon = L.divIcon({
-  className: "user-location-icon",
-  html: `<div class="relative flex items-center justify-center">
-          <div class="absolute w-6 h-6 bg-blue-500 rounded-full animate-ping opacity-25"></div>
-          <div class="relative w-4 h-4 bg-blue-600 rounded-full border-2 border-white shadow-lg"></div>
+  className: "custom-user-icon",
+  html: `<div style="position: relative; display: flex; align-items: center; justify-content: center;">
+          <div style="position: absolute; width: 32px; height: 32px; background: rgba(59,130,246,0.3); border-radius: 50%; animation: ping 1.5s cubic-bezier(0, 0, 0.2, 1) infinite;"></div>
+          <div style="position: relative; width: 18px; height: 18px; background: #2563eb; border-radius: 50%; border: 3px solid white; box-shadow: 0 2px 8px rgba(0,0,0,0.4);"></div>
         </div>`,
-  iconSize: [24, 24],
-  iconAnchor: [12, 12],
+  iconSize: [32, 32],
+  iconAnchor: [16, 16],
 });
-
-L.Marker.prototype.options.icon = DefaultIcon;
 
 interface MapProps {
   center: [number, number];
@@ -43,21 +44,35 @@ interface MapProps {
   followUser?: boolean;
 }
 
-function MapUpdater({ center, followUser }: { center: [number, number], followUser?: boolean }) {
+function MapUpdater({ 
+  center, 
+  followUser, 
+  startPoint, 
+  destination 
+}: { 
+  center: [number, number]; 
+  followUser?: boolean;
+  startPoint?: [number, number] | null;
+  destination?: [number, number] | null;
+}) {
   const map = useMap();
   const lastCenter = useRef<[number, number]>(center);
 
   useEffect(() => {
     if (followUser) {
-      map.flyTo(center, map.getZoom(), {
-        duration: 1.5,
+      map.flyTo(center, Math.max(map.getZoom(), 15), {
+        duration: 1.2,
         easeLinearity: 0.25
       });
+    } else if (startPoint && destination && !followUser) {
+      // Auto-fit bounds if both start & dest are present
+      const bounds = L.latLngBounds([startPoint, destination]);
+      map.fitBounds(bounds, { padding: [80, 80], maxZoom: 16 });
     } else if (center[0] !== lastCenter.current[0] || center[1] !== lastCenter.current[1]) {
-      map.setView(center);
+      map.setView(center, map.getZoom());
     }
     lastCenter.current = center;
-  }, [center, map, followUser]);
+  }, [center, map, followUser, startPoint, destination]);
 
   return null;
 }
@@ -73,7 +88,15 @@ function MapEvents({ onSelect }: { onSelect?: (lat: number, lng: number) => void
   return null;
 }
 
-export default function Map({ center, destination, userLocation, startPoint, radius, onSelectDestination, followUser }: MapProps) {
+export default function Map({ 
+  center, 
+  destination, 
+  userLocation, 
+  startPoint, 
+  radius, 
+  onSelectDestination, 
+  followUser 
+}: MapProps) {
   const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
@@ -81,32 +104,46 @@ export default function Map({ center, destination, userLocation, startPoint, rad
     return () => clearTimeout(timer);
   }, []);
 
-  if (!isMounted) return <div className="w-full h-full bg-[#1a1a1a] animate-pulse" />;
+  if (!isMounted) return <div className="w-full h-full bg-[#121212] animate-pulse" />;
 
   const routePoints = startPoint && destination ? [startPoint, destination] : [];
 
   return (
     <MapContainer
       center={center}
-      zoom={15}
-      style={{ height: "100%", width: "100%", background: "#1a1a1a" }}
+      zoom={14}
+      style={{ height: "100%", width: "100%", background: "#121212" }}
       zoomControl={false}
     >
       <TileLayer
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-        url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+        maxZoom={19}
       />
       
+      {/* User Live GPS Marker */}
       {userLocation && (
         <Marker position={userLocation} icon={UserIcon}>
           <Circle
             center={userLocation}
-            radius={40}
-            pathOptions={{ color: '#3b82f6', fillColor: '#3b82f6', fillOpacity: 0.1, weight: 1 }}
+            radius={35}
+            pathOptions={{ color: '#3b82f6', fillColor: '#3b82f6', fillOpacity: 0.15, weight: 1.5 }}
           />
         </Marker>
       )}
 
+      {/* Start / Pick-up Point Marker */}
+      {startPoint && (
+        <Marker position={startPoint} icon={StartIcon}>
+          <Circle
+            center={startPoint}
+            radius={25}
+            pathOptions={{ color: '#3b82f6', fillColor: '#3b82f6', fillOpacity: 0.2, weight: 2 }}
+          />
+        </Marker>
+      )}
+
+      {/* Destination Marker with Alarm Radius */}
       {destination && (
         <>
           <Marker position={destination} icon={DestinationIcon} />
@@ -115,10 +152,10 @@ export default function Map({ center, destination, userLocation, startPoint, rad
               center={destination}
               radius={radius}
               pathOptions={{ 
-                color: '#ef4444', 
-                fillColor: '#ef4444', 
-                fillOpacity: 0.05, 
-                dashArray: '10, 10',
+                color: '#f43f5e', 
+                fillColor: '#f43f5e', 
+                fillOpacity: 0.1, 
+                dashArray: '8, 8',
                 weight: 2
               }}
             />
@@ -126,26 +163,21 @@ export default function Map({ center, destination, userLocation, startPoint, rad
         </>
       )}
 
-      {startPoint && (
-        <Marker position={startPoint}>
-           <Circle
-            center={startPoint}
-            radius={15}
-            pathOptions={{ color: '#3b82f6', fillColor: 'white', fillOpacity: 1, weight: 4 }}
-          />
-        </Marker>
-      )}
-
+      {/* Connecting Route Line */}
       {routePoints.length > 0 && (
         <Polyline 
           positions={routePoints as [number, number][]} 
-          pathOptions={{ color: '#3b82f6', weight: 4, opacity: 0.5, dashArray: '5, 10' }} 
+          pathOptions={{ color: '#3b82f6', weight: 4, opacity: 0.6, dashArray: '6, 10' }} 
         />
       )}
 
-      <MapUpdater center={center} followUser={followUser} />
+      <MapUpdater 
+        center={center} 
+        followUser={followUser} 
+        startPoint={startPoint} 
+        destination={destination} 
+      />
       <MapEvents onSelect={onSelectDestination} />
     </MapContainer>
   );
 }
-

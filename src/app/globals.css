@@ -26,7 +26,7 @@
 }
 
 :root {
-  --background: 0 0% 100%;
+  --background: 220 20% 98%;
   --foreground: 224 71% 4%;
   --card: 0 0% 100%;
   --card-foreground: 224 71% 4%;
@@ -34,11 +34,11 @@
   --popover-foreground: 224 71% 4%;
   --primary: 221 83% 53%;
   --primary-foreground: 210 40% 98%;
-  --secondary: 210 40% 96.1%;
+  --secondary: 210 30% 95%;
   --secondary-foreground: 222.2 47.4% 11.2%;
-  --muted: 210 40% 96.1%;
+  --muted: 210 30% 95%;
   --muted-foreground: 215.4 16.3% 46.9%;
-  --accent: 210 40% 96.1%;
+  --accent: 210 30% 95%;
   --accent-foreground: 222.2 47.4% 11.2%;
   --destructive: 0 84.2% 60.2%;
   --destructive-foreground: 210 40% 98%;
@@ -49,99 +49,103 @@
 }
 
 .dark {
-  --background: 222 47% 4%;
+  --background: 224 35% 6%;
   --foreground: 210 40% 98%;
-  --card: 222 47% 8%;
+  --card: 224 32% 10%;
   --card-foreground: 210 40% 98%;
-  --popover: 222 47% 8%;
+  --popover: 224 32% 10%;
   --popover-foreground: 210 40% 98%;
   --primary: 217 91% 60%;
   --primary-foreground: 222 47% 4%;
-  --secondary: 222 47% 12%;
+  --secondary: 224 25% 15%;
   --secondary-foreground: 210 40% 98%;
-  --muted: 222 47% 12%;
+  --muted: 224 25% 15%;
   --muted-foreground: 215 20.2% 65.1%;
-  --accent: 222 47% 12%;
+  --accent: 224 25% 15%;
   --accent-foreground: 210 40% 98%;
   --destructive: 0 62.8% 30.6%;
   --destructive-foreground: 210 40% 98%;
-  --border: 222 47% 15%;
-  --input: 222 47% 15%;
+  --border: 224 25% 18%;
+  --input: 224 25% 18%;
   --ring: 224.3 76.3% 48%;
 }
 
 @layer base {
   * {
-    border-color: hsl(var(--border) / 0.1);
+    border-color: hsl(var(--border) / 0.15);
+    -webkit-tap-highlight-color: transparent;
   }
-  body {
+  
+  html, body {
     background-color: hsl(var(--background));
     color: hsl(var(--foreground));
     font-feature-settings: "rlig" 1, "calt" 1;
+    overscroll-behavior-y: none;
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    user-select: none;
+    touch-action: manipulation;
+  }
+
+  /* Prevent auto-zoom on iOS when tapping inputs */
+  input, select, textarea {
+    font-size: 16px !important;
+    -webkit-user-select: text;
+    user-select: text;
   }
 }
 
-/* Premium Animations */
-@keyframes float {
-  0% { transform: translateY(0px); }
-  50% { transform: translateY(-10px); }
-  100% { transform: translateY(0px); }
+/* iOS Safe Area Insets Helpers */
+.safe-top {
+  padding-top: max(1rem, env(safe-area-inset-top, 47px));
 }
 
-.animate-float {
-  animation: float 3s ease-in-out infinite;
+.safe-bottom {
+  padding-bottom: max(1rem, env(safe-area-inset-bottom, 34px));
+}
+
+.safe-inset {
+  padding-top: max(1rem, env(safe-area-inset-top, 47px));
+  padding-bottom: max(1rem, env(safe-area-inset-bottom, 34px));
+  padding-left: max(1rem, env(safe-area-inset-left, 0px));
+  padding-right: max(1rem, env(safe-area-inset-right, 0px));
 }
 
 /* Leaflet Overrides */
 .leaflet-container {
-  @apply w-full h-full grayscale-[0.2] transition-all duration-1000;
+  @apply w-full h-full;
+  background-color: #0c1017 !important;
+  touch-action: pan-x pan-y pinch-zoom;
 }
 
-.dark .leaflet-container {
-  @apply brightness-[0.7] contrast-[1.2] invert-[1] hue-rotate-[180deg];
+.dark .leaflet-tile-pane {
+  filter: invert(100%) hue-rotate(180deg) brightness(85%) contrast(110%);
+}
+
+.light .leaflet-tile-pane {
+  filter: none;
 }
 
 .leaflet-control-zoom {
   @apply !border-none !shadow-2xl rounded-2xl overflow-hidden !mt-24 !ml-6;
 }
 
-.leaflet-control-zoom-in, .leaflet-control-zoom-out {
-  background-color: hsl(var(--card));
-  color: hsl(var(--foreground));
-  @apply !w-12 !h-12 !flex !items-center !justify-center !text-xl !font-bold transition-all hover:!bg-secondary;
-  border-bottom: 1px solid hsl(var(--border) / 0.2);
+/* Smooth iOS Momentum Scrolling */
+.ios-scroll {
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
-/* Custom Scrollbar */
-::-webkit-scrollbar {
-  width: 5px;
-  height: 5px;
-}
-
-::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-::-webkit-scrollbar-thumb {
-  background-color: hsl(var(--muted-foreground) / 0.2);
-  border-radius: 9999px;
-}
-
+/* Scrollbar Hide */
 .scrollbar-hide::-webkit-scrollbar {
   display: none;
 }
-
 .scrollbar-hide {
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
 
-/* Premium Typography */
-h1, h2, h3, h4 {
-  @apply tracking-tighter font-black italic;
-}
-
-/* Active State Micro-interactions */
+/* Active Haptic Touch Scale */
 .active-tap {
-  @apply active:scale-95 transition-transform;
+  @apply active:scale-95 transition-transform duration-100;
 }
