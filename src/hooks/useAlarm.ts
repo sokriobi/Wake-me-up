@@ -9,6 +9,30 @@ export function useAlarm(settings: AppSettings) {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const audioCtxRef = useRef<AudioContext | null>(null);
   const oscillatorIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const keepAliveAudioRef = useRef<HTMLAudioElement | null>(null);
+
+  // Background Keep-Alive Audio Session (Keeps iOS & Android from sleeping when screen is locked)
+  const startBackgroundKeepAlive = useCallback(() => {
+    if (typeof window === "undefined") return;
+    try {
+      if (!keepAliveAudioRef.current) {
+        // A clean, ultra-tiny silent 1-second WAV buffer
+        const silentWavBase64 = "data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA";
+        const audio = new Audio(silentWavBase64);
+        audio.loop = true;
+        audio.volume = 0.001; // Ultra-low volume keepalive
+        keepAliveAudioRef.current = audio;
+      }
+      keepAliveAudioRef.current.play().catch(() => {});
+    } catch {}
+  }, []);
+
+  const stopBackgroundKeepAlive = useCallback(() => {
+    if (keepAliveAudioRef.current) {
+      keepAliveAudioRef.current.pause();
+      keepAliveAudioRef.current.currentTime = 0;
+    }
+  }, []);
 
   // Synthesize rich audio alarm pulses using Web Audio API (100% offline & zero network dependency)
   const playSynthesizedAlarm = useCallback((soundType: string, volume: number) => {
@@ -121,8 +145,9 @@ export function useAlarm(settings: AppSettings) {
       if (AudioCtx && (!audioCtxRef.current || audioCtxRef.current.state === "closed")) {
         audioCtxRef.current = new AudioCtx();
       }
+      startBackgroundKeepAlive();
     } catch {}
-  }, []);
+  }, [startBackgroundKeepAlive]);
 
   const requestNotificationPermission = useCallback(async () => {
     if (typeof window === "undefined") return false;
@@ -157,7 +182,7 @@ export function useAlarm(settings: AppSettings) {
       audioRef.current.play().catch(() => {});
     } catch {}
 
-    // 4. Native / Web Notification
+    // 4. Native / Web Notification (Shows on lock screen)
     if (Capacitor.isNativePlatform()) {
       await LocalNotifications.schedule({
         notifications: [{
@@ -192,6 +217,7 @@ export function useAlarm(settings: AppSettings) {
   }, [playSynthesizedAlarm, settings.alarmSound, settings.volume, settings.vibrate]);
 
   const stopAlarm = useCallback(() => {
+    stopBackgroundKeepAlive();
     if (oscillatorIntervalRef.current) {
       clearInterval(oscillatorIntervalRef.current);
       oscillatorIntervalRef.current = null;
@@ -214,7 +240,7 @@ export function useAlarm(settings: AppSettings) {
     if (Capacitor.isNativePlatform()) {
       void LocalNotifications.cancel({ notifications: [{ id: 7001 }] }).catch(() => {});
     }
-  }, []);
+  }, [stopBackgroundKeepAlive]);
 
   const previewSound = useCallback((soundType: string, volume: number) => {
     stopAlarm();
@@ -224,5 +250,14 @@ export function useAlarm(settings: AppSettings) {
     }, 1400);
   }, [playSynthesizedAlarm, stopAlarm]);
 
-  return { triggerAlarm, stopAlarm, prepareAudio, previewSound, playPreAlertChime, requestNotificationPermission };
+  return { 
+    triggerAlarm, 
+    stopAlarm, 
+    prepareAudio, 
+    previewSound, 
+    playPreAlertChime, 
+    startBackgroundKeepAlive, 
+    stopBackgroundKeepAlive,
+    requestNotificationPermission 
+  };
 }
